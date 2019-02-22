@@ -7,9 +7,8 @@ from tensorflow.contrib.opt import MovingAverageOptimizer
 
 class BigGAN_128(object):
 
-    def __init__(self, sess, args):
+    def __init__(self, args):
         self.model_name = "BigGAN"  # name for checkpoint
-        self.sess = sess
         self.dataset_name = args.dataset
         self.checkpoint_dir = args.checkpoint_dir
         self.sample_dir = args.sample_dir
@@ -204,43 +203,28 @@ class BigGAN_128(object):
     # Model
     ##################################################################################
 
-    def build_model(self):
-        """ Graph Input """
-        # images
-        Image_Data_Class = ImageData(self.img_size, self.c_dim, self.custom_dataset)
-        inputs = tf.data.Dataset.from_tensor_slices(self.data)
-
-        gpu_device = '/gpu:0'
-        inputs = inputs.\
-            apply(shuffle_and_repeat(self.dataset_num)).\
-            apply(map_and_batch(Image_Data_Class.image_processing, self.batch_size, num_parallel_batches=16, drop_remainder=True)).\
-            apply(prefetch_to_device(gpu_device, self.batch_size))
-
-        inputs_iterator = inputs.make_one_shot_iterator()
-
-        self.inputs = inputs_iterator.get_next()
-
+    def base_model_fn(self, features, labels, mode, params):
         # noises
-        self.z = tf.truncated_normal(shape=[self.batch_size, 1, 1, self.z_dim], name='random_z')
+        z = tf.truncated_normal(shape=[params.batch_size, 1, 1, parms.z_dim], name='random_z')
 
         """ Loss Function """
         # output of D for real images
-        real_logits = self.discriminator(self.inputs)
+        real_logits = self.discriminator(features)
 
         # output of D for fake images
-        fake_images = self.generator(self.z)
+        fake_images = self.generator(z)
         fake_logits = self.discriminator(fake_images, reuse=True)
 
-        if self.gan_type.__contains__('wgan') or self.gan_type == 'dragan':
-            GP = self.gradient_penalty(real=self.inputs, fake=fake_images)
+        if params.gan_type.__contains__('wgan') or params.gan_type == 'dragan':
+            GP = self.gradient_penalty(real=features, fake=fake_images)
         else:
             GP = 0
 
         # get loss for discriminator
-        self.d_loss = discriminator_loss(self.gan_type, real=real_logits, fake=fake_logits) + GP
+        d_loss = discriminator_loss(params.gan_type, real=real_logits, fake=fake_logits) + GP
 
         # get loss for generator
-        self.g_loss = generator_loss(self.gan_type, fake=fake_logits)
+        g_loss = generator_loss(params.gan_type, fake=fake_logits)
 
         """ Training """
         # divide trainable variables into a group for D and a group for G
@@ -248,6 +232,70 @@ class BigGAN_128(object):
         d_vars = [var for var in t_vars if 'discriminator' in var.name]
         g_vars = [var for var in t_vars if 'generator' in var.name]
 
+        return d_loss, d_vars, g_loss, g_vars
+
+        
+    def tpu_metric_fn(self, labels, logits):
+        pass
+
+    def tpu_model_fn(self, features, labels, mode, params):
+
+        d_loss, d_vars, g_loss, g_vars = self.base_model_fn(features, labels, mode, params)
+
+        # --------------------------------------------------------------------------
+        # Loss
+        # --------------------------------------------------------------------------
+
+        loss = g_loss
+        for i in range(params.n_critic):
+            loss += d_loss
+
+
+        # --------------------------------------------------------------------------
+        # EstimatorSpecs
+        # --------------------------------------------------------------------------
+        
+
+        # if mode == tf.estimator.ModeKeys.PREDICT:
+        #     predictions = {
+        #             "class_ids": predicted_classes[:, tf.newaxis],
+        #             "probabilities": tf.nn.softmax(logits),
+        #             "logits": logits,
+        #     }
+        #     return tf.contrib.tpu.TPUEstimatorSpec(mode, predictions=predictions)
+
+        
+        if mode == tf.estimator.ModeKeys.EVAL:
+            return tf.contrib.tpu.TPUEstimatorSpec(
+                    mode=mode, loss=loss, eval_metrics=(lambda labels, logits: self.tpu_metric_fn(labels, logits), [labels, logits]))
+
+        # Create training op.
+        if mode == tf.estimator.ModeKeys.TRAIN:
+
+            # D
+            d_optimizer = tf.train.AdamOptimizer(params.d_learning_rate, beta1=params.beta1, beta2=params.beta2)
+            if FLAGS.use_tpu:
+                d_optimizer = tf.contrib.tpu.CrossShardOptimizer(d_optimizer)
+
+            d_train_op = d_optimizer.minimize(d_loss, var_list=d_vars, global_step=tf.train.get_global_step())
+
+            # G
+            g_optimizer = MovingAverageOptimizer(
+                tf.train.AdamOptimizer(params.g_learning_rate, beta1=params.beta1, beta2=params.beta2), average_decay=params.moving_decay)
+            if FLAGS.use_tpu:
+                g_optimizer = tf.contrib.tpu.CrossShardOptimizer(g_optimizer)
+
+            g_train_op = g_optimizer.minimize(g_loss, var_list=g_vars, global_step=tf.train.get_global_step())
+
+            train_ops = [g_train_op]
+            for i in range(params.n_critic):
+                train_ops.append(d_train_op)
+            train_op = tf.group(*train_ops)
+
+            return tf.contrib.tpu.TPUEstimatorSpec(mode, loss=loss, train_op=train_op)
+
+
+    def gpu_model_fn():
         # optimizers
         with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
             self.d_optim = tf.train.AdamOptimizer(self.d_learning_rate, beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_vars)
@@ -255,14 +303,6 @@ class BigGAN_128(object):
             self.opt = MovingAverageOptimizer(tf.train.AdamOptimizer(self.g_learning_rate, beta1=self.beta1, beta2=self.beta2), average_decay=self.moving_decay)
 
             self.g_optim = self.opt.minimize(self.g_loss, var_list=g_vars)
-
-        """" Testing """
-        # for test
-        self.fake_images = self.generator(self.z, is_training=False, reuse=True)
-
-        """ Summary """
-        self.d_sum = tf.summary.scalar("d_loss", self.d_loss)
-        self.g_sum = tf.summary.scalar("g_loss", self.g_loss)
 
     ##################################################################################
     # Train
