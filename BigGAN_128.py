@@ -8,60 +8,7 @@ from tensorflow.contrib.opt import MovingAverageOptimizer
 class BigGAN_128(object):
 
 	def __init__(self, args):
-		# self.model_name = "BigGAN"  # name for checkpoint
-		# self.dataset_name = args.dataset
-		# self.checkpoint_dir = args.checkpoint_dir
-		# self.sample_dir = args.sample_dir
-		# self.result_dir = args.result_dir
-		# self.log_dir = args.log_dir
-
-		# self.epoch = args.epoch
-		# self.iteration = args.iteration
-		# self.batch_size = args._batch_size
-		# self.print_freq = args.print_freq
-		# self.save_freq = args.save_freq
-		# self.img_size = args.img_size
-
-		# """ Generator """
-		# self.ch = args.ch
-		# params['z_dim'] = args.z_dim  # dimension of noise-vector
-		# self.gan_type = args.gan_type
-
-		# """ Discriminator """
-		# self.n_critic = args.n_critic
-		# sn = args.sn
-		# self.ld = args.ld
-
-		# self.sample_num = args.sample_num  # number of generated images to be saved
-		# self.test_num = args.test_num
-
-		# # train
-		# self.g_learning_rate = args.g_lr
-		# self.d_learning_rate = args.d_lr
-		# self.beta1 = args.beta1
-		# self.beta2 = args.beta2
-		# self.moving_decay = args.moving_decay
-
-		# self.custom_dataset = False
-
-		# if self.dataset_name == 'mnist':
-		#     self.c_dim = 1
-		#     self.data = load_mnist()
-
-		# elif self.dataset_name == 'cifar10':
-		#     self.c_dim = 3
-		#     self.data = load_cifar10()
-
-		# else:
-		#     self.c_dim = 3
-		#     self.data = load_data(dataset_name=self.dataset_name)
-		#     self.custom_dataset = True
-
-		# self.dataset_num = len(self.data)
-
-		# self.sample_dir = os.path.join(self.sample_dir, self.model_dir)
-		# check_folder(self.sample_dir)
-		self.args = args
+		pass
 
 
 	##################################################################################
@@ -212,17 +159,17 @@ class BigGAN_128(object):
 		d_vars = [var for var in t_vars if 'discriminator' in var.name]
 		g_vars = [var for var in t_vars if 'generator' in var.name]
 
-		return d_loss, d_vars, g_loss, g_vars
+		return d_loss, d_vars, g_loss, g_vars, fake_images, fake_logits, z
 
 		
 	def tpu_metric_fn(self, labels, logits):
-		pass
+		return {}
 
 	def tpu_model_fn(self, features, labels, mode, params):
 
 		params = EasyDict(**params)
 
-		d_loss, d_vars, g_loss, g_vars = self.base_model_fn(features, labels, mode, params)
+		d_loss, d_vars, g_loss, g_vars, fake_images, fake_logits, z = self.base_model_fn(features, labels, mode, params)
 
 		# --------------------------------------------------------------------------
 		# Loss
@@ -237,24 +184,24 @@ class BigGAN_128(object):
 		# EstimatorSpecs
 		# --------------------------------------------------------------------------
 		
-
-		# if mode == tf.estimator.ModeKeys.PREDICT:
-		#     predictions = {
-		#             "class_ids": predicted_classes[:, tf.newaxis],
-		#             "probabilities": tf.nn.softmax(logits),
-		#             "logits": logits,
-		#     }
-		#     return tf.contrib.tpu.TPUEstimatorSpec(mode, predictions=predictions)
+		if mode == tf.estimator.ModeKeys.PREDICT:
+		    predictions = {
+				"z": z,
+				"fake_images": fake_images,
+				"logits": logits,
+		    }
+		    return tf.contrib.tpu.TPUEstimatorSpec(mode, predictions=predictions)
 
 		
 		if mode == tf.estimator.ModeKeys.EVAL:
 			return tf.contrib.tpu.TPUEstimatorSpec(
 					mode=mode, loss=loss, eval_metrics=(lambda labels, logits: self.tpu_metric_fn(labels, logits), [labels, logits]))
 
-		# Create training op.
+		
 		if mode == tf.estimator.ModeKeys.TRAIN:
 
-			# D
+			# Create training ops for both D and G
+
 			d_optimizer = tf.train.AdamOptimizer(params.d_lr, beta1=params.beta1, beta2=params.beta2)
 			
 			if params.use_tpu:
@@ -262,7 +209,7 @@ class BigGAN_128(object):
 
 			d_train_op = d_optimizer.minimize(d_loss, var_list=d_vars, global_step=tf.train.get_global_step())
 
-			# G
+			
 			g_optimizer = MovingAverageOptimizer(
 				tf.train.AdamOptimizer(params.g_lr, beta1=params.beta1, beta2=params.beta2), 
 				average_decay=params.moving_decay)
@@ -272,6 +219,8 @@ class BigGAN_128(object):
 
 			g_train_op = g_optimizer.minimize(g_loss, var_list=g_vars, global_step=tf.train.get_global_step())
 
+
+			# For each training op of G, do n_critic training ops of D
 			train_ops = [g_train_op]
 			for i in range(params.n_critic):
 				train_ops.append(d_train_op)
@@ -280,159 +229,3 @@ class BigGAN_128(object):
 			return tf.contrib.tpu.TPUEstimatorSpec(mode, loss=loss, train_op=train_op)
 
 
-	def gpu_model_fn():
-		# optimizers
-		with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
-			self.d_optim = tf.train.AdamOptimizer(self.d_learning_rate, beta1=self.beta1, beta2=self.beta2).minimize(self.d_loss, var_list=d_vars)
-
-			self.opt = MovingAverageOptimizer(tf.train.AdamOptimizer(self.g_learning_rate, beta1=self.beta1, beta2=self.beta2), average_decay=self.moving_decay)
-
-			self.g_optim = self.opt.minimize(self.g_loss, var_list=g_vars)
-
-	##################################################################################
-	# Train
-	##################################################################################
-
-	def train(self):
-		# initialize all variables
-		tf.global_variables_initializer().run()
-
-		# saver to save model
-		self.saver = self.opt.swapping_saver()
-
-		# summary writer
-		self.writer = tf.summary.FileWriter(self.log_dir + '/' + self.model_dir, self.sess.graph)
-
-		# restore check-point if it exits
-		could_load, checkpoint_counter = self.load(self.checkpoint_dir)
-		if could_load:
-			start_epoch = (int)(checkpoint_counter / self.iteration)
-			start_batch_id = checkpoint_counter - start_epoch * self.iteration
-			counter = checkpoint_counter
-			print(" [*] Load SUCCESS")
-		else:
-			start_epoch = 0
-			start_batch_id = 0
-			counter = 1
-			print(" [!] Load failed...")
-
-		# loop for epoch
-		start_time = time.time()
-		past_g_loss = -1.
-		for epoch in range(start_epoch, self.epoch):
-			# get batch data
-			for idx in range(start_batch_id, self.iteration):
-
-				# update D network
-				_, summary_str, d_loss = self.sess.run([self.d_optim, self.d_sum, self.d_loss])
-				self.writer.add_summary(summary_str, counter)
-
-				# update G network
-				g_loss = None
-				if (counter - 1) % self.n_critic == 0:
-					_, summary_str, g_loss = self.sess.run([self.g_optim, self.g_sum, self.g_loss])
-					self.writer.add_summary(summary_str, counter)
-					past_g_loss = g_loss
-
-				# display training status
-				counter += 1
-				if g_loss == None:
-					g_loss = past_g_loss
-				print("Epoch: [%2d] [%5d/%5d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
-					  % (epoch, idx, self.iteration, time.time() - start_time, d_loss, g_loss))
-
-				# save training results for every 300 steps
-				if np.mod(idx + 1, self.print_freq) == 0:
-					samples = self.sess.run(self.fake_images)
-					tot_num_samples = min(self.sample_num, self.batch_size)
-					manifold_h = int(np.floor(np.sqrt(tot_num_samples)))
-					manifold_w = int(np.floor(np.sqrt(tot_num_samples)))
-					save_images(samples[:manifold_h * manifold_w, :, :, :],
-								[manifold_h, manifold_w],
-								'./' + self.sample_dir + '/' + self.model_name + '_train_{:02d}_{:05d}.png'.format(
-									epoch, idx + 1))
-
-				if np.mod(idx + 1, self.save_freq) == 0:
-					self.save(self.checkpoint_dir, counter)
-
-			# After an epoch, start_batch_id is set to zero
-			# non-zero value is only for the first epoch after loading pre-trained model
-			start_batch_id = 0
-
-			# save model
-			self.save(self.checkpoint_dir, counter)
-
-			# show temporal results
-			# self.visualize_results(epoch)
-
-		# save model for final step
-		self.save(self.checkpoint_dir, counter)
-
-	@property
-	def model_dir(self):
-		if sn :
-			sn = '_sn'
-		else :
-			sn = ''
-
-		return "{}_{}_{}_{}_{}{}".format(
-			self.model_name, self.dataset_name, self.gan_type, self.img_size, params['z_dim'], sn)
-
-	def save(self, checkpoint_dir, step):
-		checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
-
-		if not os.path.exists(checkpoint_dir):
-			os.makedirs(checkpoint_dir)
-
-		self.saver.save(self.sess, os.path.join(checkpoint_dir, self.model_name + '.model'), global_step=step)
-
-	def load(self, checkpoint_dir):
-		print(" [*] Reading checkpoints...")
-		checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
-
-		ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
-		if ckpt and ckpt.model_checkpoint_path:
-			ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
-			self.saver.restore(self.sess, os.path.join(checkpoint_dir, ckpt_name))
-			counter = int(ckpt_name.split('-')[-1])
-			print(" [*] Success to read {}".format(ckpt_name))
-			return True, counter
-		else:
-			print(" [*] Failed to find a checkpoint")
-			return False, 0
-
-	def visualize_results(self, epoch):
-		tot_num_samples = min(self.sample_num, self.batch_size)
-		image_frame_dim = int(np.floor(np.sqrt(tot_num_samples)))
-
-		""" random condition, random noise """
-
-		samples = self.sess.run(self.fake_images)
-
-		save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
-					self.sample_dir + '/' + self.model_name + '_epoch%02d' % epoch + '_visualize.png')
-
-	def test(self):
-		tf.global_variables_initializer().run()
-
-		self.saver = tf.train.Saver()
-		could_load, checkpoint_counter = self.load(self.checkpoint_dir)
-		result_dir = os.path.join(self.result_dir, self.model_dir)
-		check_folder(result_dir)
-
-		if could_load:
-			print(" [*] Load SUCCESS")
-		else:
-			print(" [!] Load failed...")
-
-		tot_num_samples = min(self.sample_num, self.batch_size)
-		image_frame_dim = int(np.floor(np.sqrt(tot_num_samples)))
-
-		""" random condition, random noise """
-
-		for i in range(self.test_num):
-			samples = self.sess.run(self.fake_images)
-
-			save_images(samples[:image_frame_dim * image_frame_dim, :, :, :],
-						[image_frame_dim, image_frame_dim],
-						result_dir + '/' + self.model_name + '_test_{}.png'.format(i))

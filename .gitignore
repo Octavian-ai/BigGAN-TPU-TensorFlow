@@ -3,6 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+model
+samples
+results
+datasets
+
 *~
 
 # C extensions

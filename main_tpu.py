@@ -11,33 +11,36 @@ from utils import *
 def parse_args():
 	desc = "Tensorflow implementation of BigGAN"
 	parser = argparse.ArgumentParser(description=desc)
-	parser.add_argument('--model-name', type=str,default="BigGAN")
-	parser.add_argument('--phase', type=str, default='train', help='train or test ?')
-	parser.add_argument('--dataset', type=str, default='celebA-HQ', help='[mnist / cifar10 / custom_dataset]')
+	parser.add_argument('--tag'              , action="append" , default=[])
+	parser.add_argument('--phase'            , type=str        , default='train'                                           , help='train or test ?')
+	
+	parser.add_argument('--train-input-path' , type=str        , default='./datasets/atk-vclose/atk-vclose-r07.tfrecords')
+
+	parser.add_argument('--model-dir'        , type=str        , default='model')
+	parser.add_argument('--checkpoint-dir'   , type=str        , default='checkpoint')
+	parser.add_argument('--result-dir'       , type=str        , default='results')
+	parser.add_argument('--log-dir'          , type=str        , default='logs')
+	parser.add_argument('--sample-dir'       , type=str        , default='samples')
 
 	# SAGAN
 	# batch_size = 256
 	# base channel = 64
 	# epoch = 100 (1M iterations)
 
-	parser.add_argument('--img-size', type=int, default=128, help='The width and height of the input/output image')
-	parser.add_argument('--img-ch', type=int, default=128, help='The number of channels in the input/output image')
+	parser.add_argument('--img-size'        , type=int             , default=128                               , help='The width and height of the input/output image')
+	parser.add_argument('--img-ch'          , type=int             , default=3                                 , help='The number of channels in the input/output image')
 
-	parser.add_argument('--epoch', type=int, default=50, help='The number of epochs to run')
-	parser.add_argument('--train-max-steps', type=int, default=10000, help='The number of training iterations')
-	parser.add_argument('--batch-size', dest="_batch_size", type=int, default=2048, help='The size of batch across all GPUs')
-	parser.add_argument('--ch', type=int, default=96, help='base channel number per layer')
+	parser.add_argument('--train-max-steps' , type=int             , default=10000                             , help='The number of training iterations')
+	parser.add_argument('--batch-size'      , dest="_batch_size"   , type=int                                  , default=2048                                             , help='The size of batch across all GPUs')
+	parser.add_argument('--ch'              , type=int             , default=96                                , help='base channel number per layer')
 
-	parser.add_argument('--use-tpu', action='store_true')
-	parser.add_argument('--tpu-name', type=str, default=None)
-	parser.add_argument('--num-shards', type=int, default=8) # A single TPU has 8 shards
-	parser.add_argument('--steps-per-loop', type=int, default=1000) # A single TPU has 8 shards
+	parser.add_argument('--use-tpu'         , action='store_true')
+	parser.add_argument('--tpu-name'        , type=str             , default=None)
+	parser.add_argument('--num-shards'      , type=int             , default=8) # A single TPU has 8 shards
+	parser.add_argument('--steps-per-loop'  , type=int             , default=1000) # A single TPU has 8 shards
 
-	parser.add_argument('--print-freq', type=int, default=1000, help='The number of image_print_freqy')
-	parser.add_argument('--save-freq', type=int, default=1000, help='The number of ckpt_save_freq')
-
-	parser.add_argument('--g-lr', type=float, default=0.00005, help='learning rate for generator')
-	parser.add_argument('--d-lr', type=float, default=0.0002, help='learning rate for discriminator')
+	parser.add_argument('--g-lr'            , type=float           , default=0.00005                           , help='learning rate for generator')
+	parser.add_argument('--d-lr'            , type=float           , default=0.0002                            , help='learning rate for discriminator')
 
 	# if lower batch size
 	# g_lr = 0.0001
@@ -47,29 +50,19 @@ def parse_args():
 	# g_lr = 0.00005
 	# d_lr = 0.0002
 
-	parser.add_argument('--beta1', type=float, default=0.0, help='beta1 for Adam optimizer')
-	parser.add_argument('--beta2', type=float, default=0.9, help='beta2 for Adam optimizer')
-	parser.add_argument('--moving-decay', type=float, default=0.9999, help='moving average decay for generator')
+	parser.add_argument('--beta1'          , type=float    , default=0.0           , help='beta1 for Adam optimizer')
+	parser.add_argument('--beta2'          , type=float    , default=0.9           , help='beta2 for Adam optimizer')
+	parser.add_argument('--moving-decay'   , type=float    , default=0.9999        , help='moving average decay for generator')
 
-	parser.add_argument('--z-dim', type=int, default=128, help='Dimension of noise vector')
-	parser.add_argument('--sn', type=str2bool, default=True, help='using spectral norm')
+	parser.add_argument('--z-dim'          , type=int      , default=128           , help='Dimension of noise vector')
+	parser.add_argument('--sn'             , type=str2bool , default=True          , help='using spectral norm')
 
-	parser.add_argument('--gan-type', type=str, default='hinge', help='[gan / lsgan / wgan-gp / wgan-lp / dragan / hinge]')
-	parser.add_argument('--ld', type=float, default=10.0, help='The gradient penalty lambda')
+	parser.add_argument('--gan-type'       , type=str      , default='hinge'       , help='[gan / lsgan / wgan-gp / wgan-lp / dragan / hinge]')
+	parser.add_argument('--ld'             , type=float    , default=10.0          , help='The gradient penalty lambda')
+	parser.add_argument('--n-critic'       , type=int      , default=2             , help='The number of critic')
 
-	parser.add_argument('--n-critic', type=int, default=2, help='The number of critic')
-
-
-	parser.add_argument('--sample-num', type=int, default=64, help='The number of sample images')
-	parser.add_argument('--test-num', type=int, default=10, help='The number of images generated by the test')
-
-	parser.add_argument('--model-dir', type=str, default='./model')
-	parser.add_argument('--train-input-path', type=str, default='./datasets/train.tfrecord')
-
-	parser.add_argument('--checkpoint-dir', type=str, default='checkpoint')
-	parser.add_argument('--result-dir', type=str, default='results')
-	parser.add_argument('--log-dir', type=str, default='logs')
-	parser.add_argument('--sample-dir', type=str, default='samples')
+	parser.add_argument('--sample-num'     , type=int      , default=64            , help='The number of sample images')
+	parser.add_argument('--test-num'       , type=int      , default=10            , help='The number of images generated by the test')
 
 	args = parser.parse_args()
 	return check_args(args)
@@ -103,7 +96,7 @@ def print_args(args):
 	print("# gan type : ", args.gan_type)
 	print("# dataset : ", args.train_input_path)
 	print("# batch_size : ", args._batch_size)
-	print("# epoch : ", args.epoch)
+	print("# max training steps : ", args.train_max_steps)
 
 	print()
 
@@ -125,10 +118,10 @@ def model_dir(args):
 	else :
 		sn = ''
 
-	run_name = "{}_{}_{}_{}_{}{}".format(
-		args.model_name, args.dataset_name, args.gan_type, args.img_size, args.z_dim, sn)
+	run_name = "{}_{}_{}{}".format(
+		 args.gan_type, args.img_size, args.z_dim, sn)
 
-	return os.path.join(args.model_dir, run_name)
+	return os.path.join(args.model_dir, *args.tag, run_name)
 
 
 
@@ -222,3 +215,4 @@ def main():
 
 if __name__ == '__main__':
 	main()
+
