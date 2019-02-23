@@ -5,7 +5,13 @@ from glob import glob
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-from keras.datasets import cifar10, mnist
+# from keras.datasets import cifar10, mnist
+
+class EasyDict(dict):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def __getattr__(self, name): return self[name]
+    def __setattr__(self, name, value): self[name] = value
+    def __delattr__(self, name): del self[name]
 
 class ImageData:
 
@@ -28,18 +34,18 @@ class ImageData:
         return img
 
 
-def load_mnist():
-    (train_data, train_labels), (test_data, test_labels) = mnist.load_data()
-    x = np.concatenate((train_data, test_data), axis=0)
-    x = np.expand_dims(x, axis=-1)
+# def load_mnist():
+#     (train_data, train_labels), (test_data, test_labels) = mnist.load_data()
+#     x = np.concatenate((train_data, test_data), axis=0)
+#     x = np.expand_dims(x, axis=-1)
 
-    return x
+#     return x
 
-def load_cifar10() :
-    (train_data, train_labels), (test_data, test_labels) = cifar10.load_data()
-    x = np.concatenate((train_data, test_data), axis=0)
+# def load_cifar10() :
+#     (train_data, train_labels), (test_data, test_labels) = cifar10.load_data()
+#     x = np.concatenate((train_data, test_data), axis=0)
 
-    return x
+#     return x
 
 def load_data(dataset_name) :
     if dataset_name == 'mnist' :
