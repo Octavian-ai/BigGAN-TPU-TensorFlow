@@ -78,7 +78,7 @@ def save_predictions(args, predictions, epoch, model_name):
     image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
     samples = []
 
-    for prediction, idx in enumerate(predictions):
+    for prediction in predictions:
         samples.append(prediction['fake_image'])
 
     save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],

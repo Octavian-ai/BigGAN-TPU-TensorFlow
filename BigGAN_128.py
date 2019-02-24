@@ -137,12 +137,12 @@ class BigGAN_128(object):
 
 		# generate and critique fake images
 		fake_images = self.generator(params, z)
-		fake_logits = self.discriminator(params, fake_images, reuse=True)
+		fake_logits = self.discriminator(params, fake_images)
 		g_loss = generator_loss(params.gan_type, fake=fake_logits)
 
 		# Train the discriminator
 		if mode == tf.estimator.ModeKeys.TRAIN:
-			real_logits = self.discriminator(params, features)
+			real_logits = self.discriminator(params, features, reuse=True)
 
 			if params.gan_type.__contains__('wgan') or params.gan_type == 'dragan':
 				GP = self.gradient_penalty(real=features, fake=fake_images)

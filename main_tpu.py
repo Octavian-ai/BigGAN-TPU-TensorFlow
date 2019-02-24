@@ -227,7 +227,7 @@ def main():
 			tf.logging.info(f"Training epoch {epoch}")
 			tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
 			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
-			save_predictions(params, predictions, epoch, model_name(args))
+			save_predictions(args, predictions, epoch, model_name(args))
 
 
 
