@@ -5,7 +5,6 @@ from glob import glob
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-# from keras.datasets import cifar10, mnist
 
 class EasyDict(dict):
     def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
@@ -34,18 +33,20 @@ class ImageData:
         return img
 
 
-# def load_mnist():
-#     (train_data, train_labels), (test_data, test_labels) = mnist.load_data()
-#     x = np.concatenate((train_data, test_data), axis=0)
-#     x = np.expand_dims(x, axis=-1)
+def load_mnist():
+    from keras.datasets import mnist
+    (train_data, train_labels), (test_data, test_labels) = mnist.load_data()
+    x = np.concatenate((train_data, test_data), axis=0)
+    x = np.expand_dims(x, axis=-1)
 
-#     return x
+    return x
 
-# def load_cifar10() :
-#     (train_data, train_labels), (test_data, test_labels) = cifar10.load_data()
-#     x = np.concatenate((train_data, test_data), axis=0)
+def load_cifar10():
+    from keras.datasets import cifar10
+    (train_data, train_labels), (test_data, test_labels) = cifar10.load_data()
+    x = np.concatenate((train_data, test_data), axis=0)
 
-#     return x
+    return x
 
 def load_data(dataset_name) :
     if dataset_name == 'mnist' :
@@ -70,6 +71,18 @@ def normalize(x) :
 
 def save_images(images, size, image_path):
     return imsave(inverse_transform(images), size, image_path)
+
+
+def save_predictions(args, predictions, epoch, model_name):
+
+    image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
+    samples = []
+
+    for prediction, idx in enumerate(predictions):
+        samples.append(prediction['fake_image'])
+
+    save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
+                    os.path.join(args.sample_dir, model_name, 'epoch%02d' % epoch + '_sample.png'))
 
 def merge(images, size):
     h, w = images.shape[1], images.shape[2]

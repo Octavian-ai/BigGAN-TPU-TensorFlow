@@ -13,6 +13,7 @@ name = "pypi"
 
 tensorflow = "*"
 scipy = "*"
+keras = "*"
 
 
 [requires]

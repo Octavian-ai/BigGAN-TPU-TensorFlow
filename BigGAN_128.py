@@ -131,30 +131,30 @@ class BigGAN_128(object):
 	##################################################################################
 
 	def base_model_fn(self, features, labels, mode, params):
-		# noises
+		
+		# Latent input to generate images
 		z = tf.truncated_normal(shape=[params.batch_size, 1, 1, params.z_dim], name='random_z')
 
-		""" Loss Function """
-		# output of D for real images
-		real_logits = self.discriminator(params, features)
-
-		# output of D for fake images
+		# generate and critique fake images
 		fake_images = self.generator(params, z)
 		fake_logits = self.discriminator(params, fake_images, reuse=True)
-
-		if params.gan_type.__contains__('wgan') or params.gan_type == 'dragan':
-			GP = self.gradient_penalty(real=features, fake=fake_images)
-		else:
-			GP = 0
-
-		# get loss for discriminator
-		d_loss = discriminator_loss(params.gan_type, real=real_logits, fake=fake_logits) + GP
-
-		# get loss for generator
 		g_loss = generator_loss(params.gan_type, fake=fake_logits)
 
-		""" Training """
-		# divide trainable variables into a group for D and a group for G
+		# Train the discriminator
+		if mode == tf.estimator.ModeKeys.TRAIN:
+			real_logits = self.discriminator(params, features)
+
+			if params.gan_type.__contains__('wgan') or params.gan_type == 'dragan':
+				GP = self.gradient_penalty(real=features, fake=fake_images)
+			else:
+				GP = 0
+
+			d_loss = discriminator_loss(params.gan_type, real=real_logits, fake=fake_logits) + GP
+
+		else:
+			d_loss = None
+
+		# Get all the vars
 		t_vars = tf.trainable_variables()
 		d_vars = [var for var in t_vars if 'discriminator' in var.name]
 		g_vars = [var for var in t_vars if 'generator' in var.name]
@@ -172,30 +172,33 @@ class BigGAN_128(object):
 		d_loss, d_vars, g_loss, g_vars, fake_images, fake_logits, z = self.base_model_fn(features, labels, mode, params)
 
 		# --------------------------------------------------------------------------
-		# Loss
+		# Predict
 		# --------------------------------------------------------------------------
 
+		if mode == tf.estimator.ModeKeys.PREDICT:
+		    predictions = {
+				"z": z,
+				"fake_image": fake_images,
+				"fake_logits": fake_logits,
+		    }
+		    return tf.contrib.tpu.TPUEstimatorSpec(mode, predictions=predictions)
+
+
+		# --------------------------------------------------------------------------
+		# Train or Eval
+		# --------------------------------------------------------------------------
+	
 		loss = g_loss
 		for i in range(params.n_critic):
 			loss += d_loss
 
-
-		# --------------------------------------------------------------------------
-		# EstimatorSpecs
-		# --------------------------------------------------------------------------
-		
-		if mode == tf.estimator.ModeKeys.PREDICT:
-		    predictions = {
-				"z": z,
-				"fake_images": fake_images,
-				"logits": logits,
-		    }
-		    return tf.contrib.tpu.TPUEstimatorSpec(mode, predictions=predictions)
-
 		
 		if mode == tf.estimator.ModeKeys.EVAL:
 			return tf.contrib.tpu.TPUEstimatorSpec(
-					mode=mode, loss=loss, eval_metrics=(lambda labels, logits: self.tpu_metric_fn(labels, logits), [labels, logits]))
+				mode=mode,
+				loss=loss, 
+				eval_metrics=(lambda labels, logits: self.tpu_metric_fn(labels, logits), [labels, logits])
+				)
 
 		
 		if mode == tf.estimator.ModeKeys.TRAIN:
