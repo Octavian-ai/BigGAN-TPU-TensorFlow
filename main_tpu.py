@@ -31,14 +31,14 @@ def parse_args():
 	parser.add_argument('--img-ch'          , type=int             , default=3                                 , help='The number of channels in the input/output image')
 
 	parser.add_argument('--epochs'          , type=int             , default=100                               , help='The number of training iterations')
-	parser.add_argument('--train-steps'     , type=int             , default=5000                              , help='The number of training iterations')
-	parser.add_argument('--batch-size'      , dest="_batch_size"   , type=int                                  , default=2048                                             , help='The size of batch across all GPUs')
+	parser.add_argument('--train-steps'     , type=int             , default=10000                             , help='The number of training iterations')
+	parser.add_argument('--batch-size'      , type=int             , default=2048  , dest="_batch_size"        , help='The size of batch across all GPUs')
 	parser.add_argument('--ch'              , type=int             , default=96                                , help='base channel number per layer')
 
 	parser.add_argument('--use-tpu'         , action='store_true')
 	parser.add_argument('--tpu-name'        , type=str             , default=None)
 	parser.add_argument('--num-shards'      , type=int             , default=8) # A single TPU has 8 shards
-	parser.add_argument('--steps-per-loop'  , type=int             , default=2)
+	parser.add_argument('--steps-per-loop'  , type=int             , default=10000)
 
 	parser.add_argument('--g-lr'            , type=float           , default=0.00005                           , help='learning rate for generator')
 	parser.add_argument('--d-lr'            , type=float           , default=0.0002                            , help='learning rate for discriminator')
@@ -234,7 +234,7 @@ def main():
 	if args.phase == 'train':
 		for epoch in range(args.epochs):
 			print(f"Training epoch {epoch}")
-			tpu_estimator.train(input_fn=train_input_fn, max_steps=args.train_steps)
+			tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
 			
 			print(f"Evaluate {epoch}")
 			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn)
