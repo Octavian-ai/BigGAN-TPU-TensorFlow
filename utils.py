@@ -87,6 +87,12 @@ def save_predictions(args, predictions, epoch, model_name):
     save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
                     os.path.join(args.sample_dir, model_name, 'epoch%02d' % epoch + '_sample.png'))
 
+def save_evaluation(args, evaluation, epoch, model_name):
+    file_path = os.path.join(args.result_dir, model_name, "log.txt")
+
+    with open(file_path, 'a') as file:
+        file.write(f"Epoch {epoch}: {evaluation}")
+
 def merge(images, size):
     h, w = images.shape[1], images.shape[2]
     if (images.shape[3] in (3,4)):

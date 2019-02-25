@@ -72,6 +72,7 @@ def parse_args():
 def check_args(args):
 	check_folder(args.checkpoint_dir)
 	check_folder(args.result_dir)
+	check_folder(os.path.join(args.result_dir, model_name(args)))
 	check_folder(args.log_dir)
 	check_folder(args.sample_dir)
 	check_folder(os.path.join(args.sample_dir, model_name(args)))
@@ -162,17 +163,23 @@ def parse_tfrecord_tf(params, record):
 
 
 
-def generic_input_fn(params, path):
+def generic_input_fn(params, path, repeat=False):
 	dataset = tf.data.TFRecordDataset([path])
 	dataset = dataset.map(lambda record: parse_tfrecord_tf(params, record))
-	dataset = dataset.shuffle(1000).repeat()
+	dataset = dataset.shuffle(1000)
+
+	if repeat:
+		dataset = dataset.repeat()
+
 	dataset = dataset.batch(params['batch_size'], drop_remainder=True)
 
 	return dataset
 
 def train_input_fn(params):
-	return generic_input_fn(params, params['train_input_path'])
+	return generic_input_fn(params, params['train_input_path'], repeat=True)
 
+def eval_input_fn(params):
+	return generic_input_fn(params, params['train_input_path'])
 
 def predict_input_fn(params):
 	data = np.zeros([params['batch_size'], params['sample_num']//params['batch_size']])
@@ -222,17 +229,22 @@ def main():
 		params=vars(args),
 	)
 
-	tf.logging.set_verbosity("INFO")
+	tf.logging.set_verbosity("WARNING")
 
 	if args.phase == 'train':
 		for epoch in range(args.epochs):
-			tf.logging.info(f"Training epoch {epoch}")
+			print(f"Training epoch {epoch}")
 			tpu_estimator.train(input_fn=train_input_fn, max_steps=args.train_steps)
 			
-			tf.logging.info(f"Generate predictions {epoch}")
+			print(f"Evaluate {epoch}")
+			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn)
+			print(evaluation)
+			save_evaluation(args, evaluation, epoch, model_name(args))
+
+			print(f"Generate predictions {epoch}")
 			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
 			
-			tf.logging.info(f"Save predictions")
+			print(f"Save predictions")
 			save_predictions(args, predictions, epoch, model_name(args))
 
 

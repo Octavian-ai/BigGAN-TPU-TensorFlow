@@ -141,7 +141,7 @@ class BigGAN_128(object):
 		g_loss = generator_loss(params.gan_type, fake=fake_logits)
 
 		# Train the discriminator
-		if mode == tf.estimator.ModeKeys.TRAIN:
+		if mode in [tf.estimator.ModeKeys.TRAIN, tf.estimator.ModeKeys.EVAL]:
 			real_logits = self.discriminator(params, features, reuse=True)
 
 			if params.gan_type.__contains__('wgan') or params.gan_type == 'dragan':
@@ -152,7 +152,7 @@ class BigGAN_128(object):
 			d_loss = discriminator_loss(params.gan_type, real=real_logits, fake=fake_logits) + GP
 
 		else:
-			d_loss = None
+			d_loss = 0
 
 		# Get all the vars
 		t_vars = tf.trainable_variables()
@@ -162,8 +162,13 @@ class BigGAN_128(object):
 		return d_loss, d_vars, g_loss, g_vars, fake_images, fake_logits, z
 
 		
-	def tpu_metric_fn(self, labels, logits):
-		return {}
+	def tpu_metric_fn(self, d_loss, g_loss, fake_logits, z):
+		return {
+			"d_loss"      : tf.metrics.mean(d_loss),
+			"g_loss"      : tf.metrics.mean(g_loss),
+			"fake_logits" : tf.metrics.mean(fake_logits),
+			"z"           : tf.metrics.mean(z),
+		}
 
 	def tpu_model_fn(self, features, labels, mode, params):
 
@@ -197,7 +202,7 @@ class BigGAN_128(object):
 			return tf.contrib.tpu.TPUEstimatorSpec(
 				mode=mode,
 				loss=loss, 
-				eval_metrics=(lambda labels, logits: self.tpu_metric_fn(labels, logits), [labels, logits])
+				eval_metrics=(self.tpu_metric_fn.__get__(self), [d_loss, g_loss, fake_logits, z])
 				)
 
 		
