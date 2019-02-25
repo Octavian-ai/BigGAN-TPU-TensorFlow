@@ -1,7 +1,9 @@
 import scipy.misc
 import numpy as np
 import os
+import itertools
 from glob import glob
+import imageio
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
@@ -78,8 +80,9 @@ def save_predictions(args, predictions, epoch, model_name):
     image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
     samples = []
 
-    for prediction in predictions:
-        samples.append(prediction['fake_image'])
+    predictions = list(itertools.islice(predictions, args.sample_num))
+    samples = [i['fake_image'] for i in predictions]
+    samples = np.array(samples)
 
     save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
                     os.path.join(args.sample_dir, model_name, 'epoch%02d' % epoch + '_sample.png'))
@@ -106,7 +109,8 @@ def merge(images, size):
 
 def imsave(images, size, path):
     # image = np.squeeze(merge(images, size)) # 채널이 1인거 제거 ?
-    return scipy.misc.imsave(path, merge(images, size))
+    # return scipy.misc.imsave(path, merge(images, size))
+    return imageio.imwrite(path, merge(images, size))
 
 
 def inverse_transform(images):

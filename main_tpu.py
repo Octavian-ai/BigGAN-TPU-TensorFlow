@@ -222,11 +222,17 @@ def main():
 		params=vars(args),
 	)
 
+	tf.logging.set_verbosity("INFO")
+
 	if args.phase == 'train':
 		for epoch in range(args.epochs):
 			tf.logging.info(f"Training epoch {epoch}")
-			tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
+			tpu_estimator.train(input_fn=train_input_fn, max_steps=args.train_steps)
+			
+			tf.logging.info(f"Generate predictions {epoch}")
 			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
+			
+			tf.logging.info(f"Save predictions")
 			save_predictions(args, predictions, epoch, model_name(args))
 
 
