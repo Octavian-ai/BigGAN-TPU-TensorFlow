@@ -44,10 +44,14 @@ def conv(x, channels, kernel=4, stride=2, pad=0, pad_type='zero', use_bias=True,
             pad_left = pad // 2
             pad_right = pad - pad_left
 
+            padding = [[0, 0], [pad_top, pad_bottom], [pad_left, pad_right], [0, 0]]
+
+            tf.logging.info(f"Conv Paddding {scope} {padding}")
+
             if pad_type == 'zero' :
-                x = tf.pad(x, [[0, 0], [pad_top, pad_bottom], [pad_left, pad_right], [0, 0]])
+                x = tf.pad(x, padding)
             if pad_type == 'reflect' :
-                x = tf.pad(x, [[0, 0], [pad_top, pad_bottom], [pad_left, pad_right], [0, 0]], mode='REFLECT')
+                x = tf.pad(x, padding, mode='REFLECT')
 
         if sn :
             if scope.__contains__('generator') :
