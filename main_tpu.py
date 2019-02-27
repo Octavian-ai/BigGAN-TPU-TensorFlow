@@ -75,13 +75,13 @@ def parse_args():
 	args = parser.parse_args()
 	return check_args(args)
 
+def suffixed_folder(args, dir):
+	return os.path.join(dir, *args.tag, model_name(args))
+
 
 def check_args(args):
-	check_folder(args.result_dir)
-	check_folder(os.path.join(args.result_dir, model_name(args)))
-	check_folder(args.log_dir)
-	check_folder(args.sample_dir)
-	check_folder(os.path.join(args.sample_dir, model_name(args)))
+	check_folder(suffixed_folder(args, args.result_dir))
+	check_folder(suffixed_folder(args, args.sample_dir))
 
 	assert args.epochs >= 1, "number of epochs must be larger than or equal to one"
 	assert args._batch_size >= 1, "batch size must be larger than or equal to one"
@@ -232,13 +232,13 @@ def main():
 			logger.info(f"Evaluate {epoch}")
 			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
 			logger.info(evaluation)
-			save_evaluation(args, evaluation, epoch, model_name(args))
+			save_evaluation(args, suffixed_folder(args, args.result_dir), evaluation, epoch)
 
 			logger.info(f"Generate predictions {epoch}")
 			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
 			
 			logger.info(f"Save predictions")
-			save_predictions(args, predictions, epoch, model_name(args))
+			save_predictions(args, suffixed_folder(args, args.sample_dir), predictions, epoch)
 
 
 

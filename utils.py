@@ -75,7 +75,7 @@ def save_images(images, size, image_path):
     return imsave(inverse_transform(images), size, image_path)
 
 
-def save_predictions(args, predictions, epoch, model_name):
+def save_predictions(args, sample_dir, predictions, epoch):
 
     image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
     samples = []
@@ -99,10 +99,10 @@ def save_predictions(args, predictions, epoch, model_name):
     samples = np.array(samples)
 
     save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
-                    os.path.join(args.sample_dir, model_name, 'epoch%02d' % epoch + '_sample.png'))
+                    os.path.join(sample_dir, 'epoch%02d' % epoch + '_sample.png'))
 
-def save_evaluation(args, evaluation, epoch, model_name):
-    file_path = os.path.join(args.result_dir, model_name, "log.txt")
+def save_evaluation(args, result_dir, evaluation, epoch):
+    file_path = os.path.join(result_dir, "log.txt")
 
     with open(file_path, 'a') as file:
         file.write(f"Epoch {epoch}: {evaluation}")

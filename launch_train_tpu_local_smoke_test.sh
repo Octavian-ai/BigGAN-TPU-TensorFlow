@@ -7,3 +7,4 @@ pipenv run python main_tpu.py \
 	--batch-size 32 \
 	--ch 8 \
 	--epoch 10 \
+	$@
