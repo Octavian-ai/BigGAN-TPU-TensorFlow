@@ -175,7 +175,7 @@ def train_input_fn(params):
 	return generic_input_fn(params, params['train_input_path'], repeat=True)
 
 def eval_input_fn(params):
-	return generic_input_fn(params, params['train_input_path'])
+	return generic_input_fn(params, params['train_input_path'], repeat=True)
 
 def predict_input_fn(params):
 	data = np.zeros([params['sample_num'], 1], dtype=np.float32)
