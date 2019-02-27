@@ -199,11 +199,19 @@ class BigGAN_128(object):
 
 		
 		if mode == tf.estimator.ModeKeys.EVAL:
+
+			# Hack to allow it out of a fixed batch size TPU
+			d_loss_batched = tf.tile(tf.expand_dims(d_loss, 0), [params.batch_size])
+			g_loss_batched = tf.tile(tf.expand_dims(g_loss, 0), [params.batch_size])
+
 			return tf.contrib.tpu.TPUEstimatorSpec(
 				mode=mode,
 				loss=loss, 
-				eval_metrics=(self.tpu_metric_fn.__get__(self), [d_loss, g_loss, fake_logits, z])
+				eval_metrics=(
+					lambda d_loss, g_loss, fake_logits, z: self.tpu_metric_fn(d_loss, g_loss, fake_logits, z), 
+					[d_loss_batched, g_loss_batched, fake_logits, z]
 				)
+			)
 
 		
 		if mode == tf.estimator.ModeKeys.TRAIN:

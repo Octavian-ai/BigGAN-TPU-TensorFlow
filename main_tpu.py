@@ -78,20 +78,8 @@ def check_args(args):
 	check_folder(args.sample_dir)
 	check_folder(os.path.join(args.sample_dir, model_name(args)))
 
-
-	# --epoch
-	try:
-		assert args.epoch >= 1
-	except:
-		print('number of epochs must be larger than or equal to one')
-
-	# --batch_size
-	try:
-		assert args._batch_size >= 1
-	except:
-		print('batch size must be larger than or equal to one')
-
-
+	assert args.epochs >= 1, "number of epochs must be larger than or equal to one"
+	assert args._batch_size >= 1, "batch size must be larger than or equal to one"
 	assert args.ch >= 8, "--ch cannot be less than 8 otherwise some dimensions of the network will be size 0"
 
 	return args
@@ -217,7 +205,8 @@ def main():
 		evaluation_master=master,
 		model_dir=model_dir(args),
 		session_config=tf.ConfigProto(
-			allow_soft_placement=True, log_device_placement=True),
+			allow_soft_placement=True, 
+			log_device_placement=False),
 		tpu_config=tf.contrib.tpu.TPUConfig(args.steps_per_loop,
 											args.num_shards),
 	)
