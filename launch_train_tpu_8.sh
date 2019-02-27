@@ -7,5 +7,5 @@ python3.6 main_tpu.py --use-tpu --tpu-name node-1 \
 	--verbosity WARNING \
 	--steps-per-loop 1000 \
 	--train-steps 1000 \
-	--eval-steps 100 \
+	--eval-steps 10 \
 
