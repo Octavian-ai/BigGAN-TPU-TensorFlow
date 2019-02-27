@@ -30,6 +30,7 @@ def parse_args():
 
 	parser.add_argument('--epochs'          , type=int             , default=100                               , help='The number of training iterations')
 	parser.add_argument('--train-steps'     , type=int             , default=10000                             , help='The number of training iterations')
+	parser.add_argument('--eval-steps'      , type=int             , default=100                               , help='The number of eval iterations')
 	parser.add_argument('--batch-size'      , type=int             , default=2048  , dest="_batch_size"        , help='The size of batch across all GPUs')
 	parser.add_argument('--ch'              , type=int             , default=96                                , help='base channel number per layer')
 
@@ -239,7 +240,7 @@ def main():
 			tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
 			
 			print(f"Evaluate {epoch}")
-			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn)
+			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
 			print(evaluation)
 			save_evaluation(args, evaluation, epoch, model_name(args))
 
