@@ -35,6 +35,7 @@ def parse_args():
 
 	parser.add_argument('--use-tpu'         , action='store_true')
 	parser.add_argument('--tpu-name'        , action='append'      , default=[] , type=str             )
+	parser.add_argument('--tpu-zone'		, type=str, default='us-central1-f')
 	parser.add_argument('--num-shards'      , type=int             , default=8) # A single TPU has 8 shards
 	parser.add_argument('--steps-per-loop'  , type=int             , default=10000)
 
@@ -201,7 +202,7 @@ def main():
 
 		cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
 				tpu=args.tpu_name,
-				# zone=my_zone,
+				zone=args.tpu_zone,
 				# project=my_project_name
 				)
 		master = cluster_resolver.get_master()
