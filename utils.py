@@ -80,10 +80,14 @@ def save_predictions(args, predictions, epoch, model_name):
     image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
     samples = []
 
-    for ct, i in enumerate(predictions):
-        if ct > args.sample_num:
-            break
-        samples.append(i['fake_image'])
+    try:
+        for ct, i in enumerate(predictions):
+            if ct > args.sample_num:
+                break
+            samples.append(i['fake_image'])
+    
+    except tf.errors.OutOfRangeError:
+        pass
 
 
     assert len(samples) > 0, "No predictions returned from TensorFlow"
