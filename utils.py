@@ -80,8 +80,14 @@ def save_predictions(args, predictions, epoch, model_name):
     image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
     samples = []
 
-    predictions = list(itertools.islice(predictions, args.sample_num))
-    samples = [i['fake_image'] for i in predictions]
+    for ct, i in enumerate(predictions):
+        if ct > args.sample_num:
+            break
+        samples.append(i['fake_image'])
+
+
+    assert len(samples) > 0, "No predictions returned from TensorFlow"
+
     samples = np.array(samples)
 
     save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
