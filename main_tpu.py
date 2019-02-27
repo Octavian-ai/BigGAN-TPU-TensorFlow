@@ -194,14 +194,16 @@ def main():
 	gan = BigGAN_128(args)
 
 	if args.use_tpu:
-		my_project_name = subprocess.check_output([
-			'gcloud','config','get-value','project'])
-		my_zone = subprocess.check_output([
-			'gcloud','config','get-value','compute/zone'])
+		# my_project_name = subprocess.check_output([
+		# 	'gcloud','config','get-value','project'])
+		# my_zone = subprocess.check_output([
+		# 	'gcloud','config','get-value','compute/zone'])
+
 		cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
-				tpu_names=args.tpu_name,
-				zone=my_zone,
-				project=my_project_name)
+				tpu=args.tpu_name,
+				# zone=my_zone,
+				# project=my_project_name
+				)
 		master = cluster_resolver.get_master()
 	else:
 		master = ''
