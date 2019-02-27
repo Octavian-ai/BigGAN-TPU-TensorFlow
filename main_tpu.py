@@ -15,9 +15,7 @@ def parse_args():
 	parser.add_argument('--phase'            , type=str        , default='train'                                           , help='train or test ?')
 	
 	parser.add_argument('--train-input-path' , type=str        , default='./datasets/atk-vclose/atk-vclose-r07.tfrecords')
-
 	parser.add_argument('--model-dir'        , type=str        , default='model')
-	parser.add_argument('--checkpoint-dir'   , type=str        , default='checkpoint')
 	parser.add_argument('--result-dir'       , type=str        , default='results')
 	parser.add_argument('--log-dir'          , type=str        , default='logs')
 	parser.add_argument('--sample-dir'       , type=str        , default='samples')
@@ -70,7 +68,6 @@ def parse_args():
 
 
 def check_args(args):
-	check_folder(args.checkpoint_dir)
 	check_folder(args.result_dir)
 	check_folder(os.path.join(args.result_dir, model_name(args)))
 	check_folder(args.log_dir)
