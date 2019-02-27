@@ -34,7 +34,7 @@ def parse_args():
 	parser.add_argument('--ch'              , type=int             , default=96                                , help='base channel number per layer')
 
 	parser.add_argument('--use-tpu'         , action='store_true')
-	parser.add_argument('--tpu-name'        , type=str             , default=None)
+	parser.add_argument('--tpu-name'        , action='append'      , default=[] , type=str             )
 	parser.add_argument('--num-shards'      , type=int             , default=8) # A single TPU has 8 shards
 	parser.add_argument('--steps-per-loop'  , type=int             , default=10000)
 
@@ -199,9 +199,9 @@ def main():
 		my_zone = subprocess.check_output([
 			'gcloud','config','get-value','compute/zone'])
 		cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
-				tpu_names=[args.tpu_name],
+				tpu_names=args.tpu_name,
 				zone=my_zone,
-				project=my_project)
+				project=my_project_name)
 		master = cluster_resolver.get_master()
 	else:
 		master = ''
