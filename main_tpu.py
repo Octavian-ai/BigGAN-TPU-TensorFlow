@@ -5,6 +5,11 @@ import argparse
 import subprocess
 import os.path
 
+import logging
+import coloredlogs
+logger = logging.getLogger(__name__)
+coloredlogs.install(level='INFO', logger=logger)
+
 from utils import *
 
 """parsing and configuration"""
@@ -86,31 +91,31 @@ def check_args(args):
 
 
 def print_args(args):
-	print()
+	logger.info("")
 
-	print("##### Information #####")
-	print("# BigGAN 128")
-	print("# gan type : ", args.gan_type)
-	print("# dataset : ", args.train_input_path)
-	print("# batch_size : ", args._batch_size)
-	print("# training steps : ", args.train_steps)
-	print("# epochs : ", args.epochs)
+	logger.info("##### Information #####")
+	logger.info("# BigGAN 128")
+	logger.info("# gan type : ", args.gan_type)
+	logger.info("# dataset : ", args.train_input_path)
+	logger.info("# batch_size : ", args._batch_size)
+	logger.info("# training steps : ", args.train_steps)
+	logger.info("# epochs : ", args.epochs)
 
 
-	print()
+	logger.info("")
 
-	print("##### Generator #####")
-	print("# spectral normalization : ", args.sn)
-	print("# learning rate : ", args.g_lr)
+	logger.info("##### Generator #####")
+	logger.info("# spectral normalization : ", args.sn)
+	logger.info("# learning rate : ", args.g_lr)
 
-	print()
+	logger.info("")
 
-	print("##### Discriminator #####")
-	print("# the number of critic : ", args.n_critic)
-	print("# spectral normalization : ", args.sn)
-	print("# learning rate : ", args.d_lr)
+	logger.info("##### Discriminator #####")
+	logger.info("# the number of critic : ", args.n_critic)
+	logger.info("# spectral normalization : ", args.sn)
+	logger.info("# learning rate : ", args.d_lr)
 
-	print()
+	logger.info("")
 
 
 def model_name(args):
@@ -173,7 +178,7 @@ def eval_input_fn(params):
 	return generic_input_fn(params, params['train_input_path'])
 
 def predict_input_fn(params):
-	data = np.zeros([params['sample_num'], 1])
+	data = np.zeros([params['sample_num'], 1], dtype=np.float32)
 	dataset = tf.data.Dataset.from_tensor_slices(data)
 	dataset = dataset.batch(params['batch_size'], drop_remainder=True)
 	return dataset
@@ -185,21 +190,15 @@ def main():
 	if args is None:
 	  exit()
 
-	print_args(args)
+	tf.logging.set_verbosity(args.verbosity)
+	# print_args(args)
 
 	gan = BigGAN_128(args)
 
 	if args.use_tpu:
-		# my_project_name = subprocess.check_output([
-		# 	'gcloud','config','get-value','project'])
-		# my_zone = subprocess.check_output([
-		# 	'gcloud','config','get-value','compute/zone'])
-
 		cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
-				tpu=args.tpu_name,
-				zone=args.tpu_zone,
-				# project=my_project_name
-				)
+			tpu=args.tpu_name,
+			zone=args.tpu_zone)
 		master = cluster_resolver.get_master()
 	else:
 		master = ''
@@ -225,22 +224,20 @@ def main():
 		params=vars(args),
 	)
 
-	tf.logging.set_verbosity(args.verbosity)
-
 	if args.phase == 'train':
 		for epoch in range(args.epochs):
-			print(f"Training epoch {epoch}")
+			logger.info(f"Training epoch {epoch}")
 			tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
 			
-			print(f"Evaluate {epoch}")
+			logger.info(f"Evaluate {epoch}")
 			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
-			print(evaluation)
+			logger.info(evaluation)
 			save_evaluation(args, evaluation, epoch, model_name(args))
 
-			print(f"Generate predictions {epoch}")
+			logger.info(f"Generate predictions {epoch}")
 			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
 			
-			print(f"Save predictions")
+			logger.info(f"Save predictions")
 			save_predictions(args, predictions, epoch, model_name(args))
 
 

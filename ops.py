@@ -46,8 +46,6 @@ def conv(x, channels, kernel=4, stride=2, pad=0, pad_type='zero', use_bias=True,
 
             padding = [[0, 0], [pad_top, pad_bottom], [pad_left, pad_right], [0, 0]]
 
-            tf.logging.info(f"Conv Paddding {scope} {padding}")
-
             if pad_type == 'zero' :
                 x = tf.pad(x, padding)
             if pad_type == 'reflect' :

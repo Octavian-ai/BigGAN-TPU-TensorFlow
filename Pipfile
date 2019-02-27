@@ -1,17 +1,25 @@
 [[source]]
+
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
+
 [dev-packages]
 
+
+
 [packages]
+
 tensorflow = "==1.12"
 scipy = "*"
 keras = "*"
 imageio = "*"
 google-api-python-client = "*"
-oauth2client = "*"
+"oauth2client" = "*"
+coloredlogs = "*"
+
 
 [requires]
+
 python_version = "3.6"
