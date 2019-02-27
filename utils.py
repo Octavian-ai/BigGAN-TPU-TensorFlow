@@ -89,9 +89,12 @@ def save_predictions(args, predictions, epoch, model_name):
     except tf.errors.OutOfRangeError:
         pass
 
-    if len(samples) == 0
-        tf.logging.warn(f"No predictions returned from TensorFlow in epoch {epoch}")
+    if len(samples) == 0:
+        tf.logging.warning(f"No predictions returned from TensorFlow in epoch {epoch}")
         return
+
+    else:
+        tf.logging.info(f"Saving grid of {len(samples)} predictions")
 
     samples = np.array(samples)
 
