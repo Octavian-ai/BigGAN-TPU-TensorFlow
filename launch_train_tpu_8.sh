@@ -5,7 +5,7 @@ python3.6 main_tpu.py --use-tpu --tpu-name node-1 \
 	--model-dir gs://octavian-training2/pgan/model \
 	--batch-size 256  \
 	--verbosity INFO \
-	--steps-per-loop 100 \
+	--steps-per-loop 1000 \
 	--train-steps 1000 \
 	--eval-steps 10 \
 
