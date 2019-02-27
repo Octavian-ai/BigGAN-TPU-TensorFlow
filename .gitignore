@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#Pipfile#
+nohup.out
+
 model
 samples
 results
