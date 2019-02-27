@@ -8,4 +8,5 @@ python3.6 main_tpu.py --use-tpu --tpu-name node-1 \
 	--steps-per-loop 1000 \
 	--train-steps 1000 \
 	--eval-steps 10 \
-
+	$@
+	
