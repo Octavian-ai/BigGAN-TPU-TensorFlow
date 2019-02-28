@@ -1,4 +1,7 @@
-# BigGAN-Tensorflow
+# BigGAN-Tensorflow-TPU
+
+**This is a half-finished TPU conversion of Junho Kim's implementation. Only 128x128 supported ATM**
+
 Simple Tensorflow implementation of ["Large Scale GAN Training for High Fidelity Natural Image Synthesis" (BigGAN)](https://arxiv.org/abs/1809.11096)
 
 ![main](./assets/main.png)
@@ -8,22 +11,10 @@ Simple Tensorflow implementation of ["Large Scale GAN Training for High Fidelity
 * I have applied a hierarchical latent space, but **not** a class embeddedding.
 
 ## Usage
-### dataset
-* `mnist` and `cifar10` are used inside keras
-* For `your dataset`, put images like this:
 
-```
-├── dataset
-   └── YOUR_DATASET_NAME
-       ├── xxx.jpg (name, format doesn't matter)
-       ├── yyy.png
-       └── ...
-```
 ### train
-* python main.py --phase train --dataset celebA-HQ --gan_type hinge
+* pipenv run ./launch_tpu_8.sh
 
-### test
-* python main.py --phase test --dataset celebA-HQ --gan_type hinge
 
 ## Architecture
 <img src = './assets/architecture.png' width = '600px'> 
@@ -39,3 +30,4 @@ Simple Tensorflow implementation of ["Large Scale GAN Training for High Fidelity
 
 ## Author
 Junho Kim
+David Mack
