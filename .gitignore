@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 #Pipfile#
-nohup.out
+nohup*
 
 model
 samples
