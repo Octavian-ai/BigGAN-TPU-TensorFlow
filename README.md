@@ -1,6 +1,6 @@
 # BigGAN-Tensorflow-TPU
 
-**This is a half-finished TPU conversion of Junho Kim's implementation. Only 128x128 supported ATM**
+**This is a half-finished TPU conversion of [Junho Kim's](https://github.com/taki0112/BigGAN-Tensorflow) implementation. Only 128x128 supported ATM**
 
 Simple Tensorflow implementation of ["Large Scale GAN Training for High Fidelity Natural Image Synthesis" (BigGAN)](https://arxiv.org/abs/1809.11096)
 
@@ -29,5 +29,4 @@ Simple Tensorflow implementation of ["Large Scale GAN Training for High Fidelity
 <img src = './assets/512.png' width = '600px'> 
 
 ## Author
-Junho Kim
-David Mack
+Junho Kim, David Mack
