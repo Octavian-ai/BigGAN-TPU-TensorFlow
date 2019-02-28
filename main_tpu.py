@@ -91,31 +91,8 @@ def check_args(args):
 
 
 def print_args(args):
-	logger.info("")
+	logger.info(vars(args))
 
-	logger.info("##### Information #####")
-	logger.info("# BigGAN 128")
-	logger.info("# gan type : ", args.gan_type)
-	logger.info("# dataset : ", args.train_input_path)
-	logger.info("# batch_size : ", args._batch_size)
-	logger.info("# training steps : ", args.train_steps)
-	logger.info("# epochs : ", args.epochs)
-
-
-	logger.info("")
-
-	logger.info("##### Generator #####")
-	logger.info("# spectral normalization : ", args.sn)
-	logger.info("# learning rate : ", args.g_lr)
-
-	logger.info("")
-
-	logger.info("##### Discriminator #####")
-	logger.info("# the number of critic : ", args.n_critic)
-	logger.info("# spectral normalization : ", args.sn)
-	logger.info("# learning rate : ", args.d_lr)
-
-	logger.info("")
 
 
 def model_name(args):
@@ -124,8 +101,8 @@ def model_name(args):
 	else :
 		sn = ''
 
-	return "{}_{}_{}{}_{}".format(
-		 args.gan_type, args.img_size, args.z_dim, sn, args.ch)
+	return "{}_{}_{}_{}_{}{}".format(
+		 args.gan_type, args.img_size, args._batch_size, args.ch, args.z_dim, sn)
 
 def model_dir(args):
 	return os.path.join(args.model_dir, *args.tag, model_name(args))
