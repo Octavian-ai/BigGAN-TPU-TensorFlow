@@ -162,12 +162,11 @@ class BigGAN_128(object):
 		return d_loss, d_vars, g_loss, g_vars, fake_images, fake_logits, z
 
 		
-	def tpu_metric_fn(self, d_loss, g_loss, fake_logits, z):
+	def tpu_metric_fn(self, d_loss, g_loss, fake_logits):
 		return {
 			"d_loss"      : tf.metrics.mean(d_loss),
 			"g_loss"      : tf.metrics.mean(g_loss),
 			"fake_logits" : tf.metrics.mean(fake_logits),
-			"z"           : tf.metrics.mean(z),
 		}
 
 	def tpu_model_fn(self, features, labels, mode, params):
@@ -208,8 +207,8 @@ class BigGAN_128(object):
 				mode=mode,
 				loss=loss, 
 				eval_metrics=(
-					lambda d_loss, g_loss, fake_logits, z: self.tpu_metric_fn(d_loss, g_loss, fake_logits, z), 
-					[d_loss_batched, g_loss_batched, fake_logits, z]
+					lambda d_loss, g_loss, fake_logits: self.tpu_metric_fn(d_loss, g_loss, fake_logits), 
+					[d_loss_batched, g_loss_batched, fake_logits]
 				)
 			)
 
