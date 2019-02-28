@@ -98,8 +98,9 @@ def save_predictions(args, sample_dir, predictions, epoch):
 
     samples = np.array(samples)
 
-    save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
-                    os.path.join(sample_dir, 'epoch%02d' % epoch + '_sample.png'))
+    for filename in ['epoch%02d' % epoch + '_sample.png', 'latest_sample.png']:
+        save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
+                        os.path.join(sample_dir, filename))
 
 def save_evaluation(args, result_dir, evaluation, epoch):
     file_path = os.path.join(result_dir, "log.txt")
