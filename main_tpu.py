@@ -45,6 +45,8 @@ def parse_args():
 	parser.add_argument('--num-shards'      , type=int             , default=8) # A single TPU has 8 shards
 	parser.add_argument('--steps-per-loop'  , type=int             , default=10000)
 
+	parser.add_argument('--disable-self-attn', action='store_false',dest='use_self_attn')
+
 	parser.add_argument('--g-lr'            , type=float           , default=0.00005                           , help='learning rate for generator')
 	parser.add_argument('--d-lr'            , type=float           , default=0.0002                            , help='learning rate for discriminator')
 

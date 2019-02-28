@@ -50,8 +50,10 @@ class BigGAN_128(object):
 
 			x = resblock_up_condition(x, z_split[4], channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_up_2')
 
-			# Non-Local Block
-			x = self_attention_2(x, channels=ch, sn=sn, scope='self_attention')
+			if params['use_self_attn']:
+				# Non-Local Block
+				x = self_attention_2(x, channels=ch, sn=sn, scope='self_attention')
+		
 			ch = ch // 2
 
 			x = resblock_up_condition(x, z_split[5], channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_up_1')
@@ -75,8 +77,10 @@ class BigGAN_128(object):
 
 			x = resblock_down(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_down_1')
 
-			# Non-Local Block
-			x = self_attention_2(x, channels=ch, sn=sn, scope='self_attention')
+			if params['use_self_attn']:
+				# Non-Local Block
+				x = self_attention_2(x, channels=ch, sn=sn, scope='self_attention')
+			
 			ch = ch * 2
 
 			x = resblock_down(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_down_2')
@@ -162,12 +166,11 @@ class BigGAN_128(object):
 		return d_loss, d_vars, g_loss, g_vars, fake_images, fake_logits, z
 
 		
-	def tpu_metric_fn(self, d_loss, g_loss, fake_logits, z):
+	def tpu_metric_fn(self, d_loss, g_loss, fake_logits):
 		return {
 			"d_loss"      : tf.metrics.mean(d_loss),
 			"g_loss"      : tf.metrics.mean(g_loss),
 			"fake_logits" : tf.metrics.mean(fake_logits),
-			"z"           : tf.metrics.mean(z),
 		}
 
 	def tpu_model_fn(self, features, labels, mode, params):
@@ -208,8 +211,8 @@ class BigGAN_128(object):
 				mode=mode,
 				loss=loss, 
 				eval_metrics=(
-					lambda d_loss, g_loss, fake_logits, z: self.tpu_metric_fn(d_loss, g_loss, fake_logits, z), 
-					[d_loss_batched, g_loss_batched, fake_logits, z]
+					lambda d_loss, g_loss, fake_logits: self.tpu_metric_fn(d_loss, g_loss, fake_logits), 
+					[d_loss_batched, g_loss_batched, fake_logits]
 				)
 			)
 
