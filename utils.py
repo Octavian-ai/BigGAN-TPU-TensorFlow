@@ -168,14 +168,6 @@ def save_evaluation(args, result_dir, evaluation, epoch, total_steps):
         file.write(f"Step {total_steps}\t{evaluation}\n")
 
 
-def log_args(args):
-    file_path = os.path.join(suffixed_folder(args, args.result_dir), "log.txt")
-
-    with tf.gfile.Open(file_path, 'a') as file:
-        file.write(f"{vars(args)}\n")
-
-
-
 def merge(images, size):
     h, w = images.shape[1], images.shape[2]
     if (images.shape[3] in (3,4)):

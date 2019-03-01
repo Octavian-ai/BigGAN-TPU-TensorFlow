@@ -11,12 +11,6 @@ import os.path
 import logging
 import coloredlogs
 logger = logging.getLogger(__name__)
-coloredlogs.install(level='INFO', logger=logger)
-coloredlogs.install(level='DEBUG', logger=logging.getLogger('ops'))
-coloredlogs.install(level='DEBUG', logger=logging.getLogger('utils'))
-coloredlogs.install(level='DEBUG', logger=logging.getLogger('BigGAN_128'))
-
-
 
 
 from utils import *
@@ -162,13 +156,33 @@ def predict_input_fn(params):
 	return dataset
 
 
+def setup_logging(args):
+
+	coloredlogs.install(level='INFO', logger=logger)
+	coloredlogs.install(level='DEBUG', logger=logging.getLogger('ops'))
+	coloredlogs.install(level='DEBUG', logger=logging.getLogger('utils'))
+	coloredlogs.install(level='DEBUG', logger=logging.getLogger('BigGAN_128'))
+
+	tf.logging.set_verbosity(args.verbosity)
+
+	log = logging.getLogger()
+	log_path = os.path.join(suffixed_folder(args, args.result_dir), 'log.txt')
+	stream = tf.gfile.Open(log_path, 'w+')
+	fh = logging.StreamHandler(stream=stream)
+	fh.setLevel(logging.INFO)
+
+	formatter = logging.Formatter('%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s')
+	fh.setFormatter(formatter)
+	log.addHandler(fh)
+
+	logger.info(f"cmd args: {vars(args)}")
+
 def main():
 	args = parse_args()
 	if args is None:
 	  exit()
 
-	tf.logging.set_verbosity(args.verbosity)
-	log_args(args)
+	setup_logging(args)
 
 	gan = BigGAN_128(args)
 
