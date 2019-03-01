@@ -10,5 +10,6 @@ nohup pipenv run python3.6 main_tpu.py --use-tpu \
 	--train-steps 2000 \
 	--eval-steps 10 \
 	--epochs 20 \
+	--tag run-$RANDOM \
 	$@ &
 	

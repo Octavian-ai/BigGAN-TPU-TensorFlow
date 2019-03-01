@@ -234,18 +234,16 @@ def main():
 		logger.info(f"Training epoch {epoch}")
 		tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
 		total_steps += args.train_steps
-
-		if args.use_comet:
-			experiment.set_step(total_steps)
 		
 		logger.info(f"Evaluate {epoch}")
 		evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
 		
 		if args.use_comet:
+			experiment.set_step(total_steps)
 			experiment.log_metrics(evaluation)
 			
 		logger.info(evaluation)
-		save_evaluation(args, eval_file, evaluation, epoch, total_steps)
+		# save_evaluation(args, eval_file, evaluation, epoch, total_steps)
 
 		# logger.info(f"Generate predictions {epoch}")
 		# predictions = tpu_estimator.predict(input_fn=predict_input_fn)
