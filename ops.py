@@ -1,6 +1,9 @@
 import tensorflow as tf
 from utils import orthogonal_regularizer_fully, orthogonal_regularizer
 
+import logging
+logger = logging.getLogger(__name__)
+
 ##################################################################################
 # Initialization
 ##################################################################################
@@ -106,7 +109,7 @@ def deconv(x, channels, kernel=4, stride=2, padding='SAME', use_bias=True, sn=Fa
 
         return x
 
-def fully_conneted(x, units, use_bias=True, sn=False, scope='fully_0'):
+def fully_connected(x, units, use_bias=True, sn=False, scope='fully_0'):
     with tf.variable_scope(scope):
         x = flatten(x)
         shape = x.get_shape().as_list()
@@ -146,6 +149,7 @@ def hw_flatten(x) :
 ##################################################################################
 
 def resblock(x_init, channels, use_bias=True, is_training=True, sn=False, scope='resblock'):
+    logger.debug(f"resblock {scope}")
     with tf.variable_scope(scope):
         with tf.variable_scope('res1'):
             x = conv(x_init, channels, kernel=3, stride=1, pad=1, use_bias=use_bias, sn=sn)
@@ -159,6 +163,7 @@ def resblock(x_init, channels, use_bias=True, is_training=True, sn=False, scope=
         return x + x_init
 
 def resblock_up(x_init, channels, use_bias=True, is_training=True, sn=False, scope='resblock_up'):
+    logger.debug(f"resblock_up {scope}")
     with tf.variable_scope(scope):
         with tf.variable_scope('res1'):
             x = batch_norm(x_init, is_training)
@@ -177,6 +182,7 @@ def resblock_up(x_init, channels, use_bias=True, is_training=True, sn=False, sco
     return x + x_init
 
 def resblock_up_condition(x_init, z, channels, use_bias=True, is_training=True, sn=False, scope='resblock_up'):
+    logger.debug(f"resblock_up_condition {scope}")
     with tf.variable_scope(scope):
         with tf.variable_scope('res1'):
             x = condition_batch_norm(x_init, z, is_training)
@@ -196,6 +202,7 @@ def resblock_up_condition(x_init, z, channels, use_bias=True, is_training=True, 
 
 
 def resblock_down(x_init, channels, use_bias=True, is_training=True, sn=False, scope='resblock_down'):
+    logger.debug(f"resblock_down {scope} ")
     with tf.variable_scope(scope):
         with tf.variable_scope('res1'):
             x = batch_norm(x_init, is_training)
@@ -214,6 +221,7 @@ def resblock_down(x_init, channels, use_bias=True, is_training=True, sn=False, s
     return x + x_init
 
 def self_attention(x, channels, sn=False, scope='self_attention'):
+    logger.debug(f"self_attention {scope}")
     with tf.variable_scope(scope):
         f = conv(x, channels // 8, kernel=1, stride=1, sn=sn, scope='f_conv')  # [bs, h, w, c']
         g = conv(x, channels // 8, kernel=1, stride=1, sn=sn, scope='g_conv')  # [bs, h, w, c']
@@ -233,6 +241,7 @@ def self_attention(x, channels, sn=False, scope='self_attention'):
     return x
 
 def self_attention_2(x, channels, sn=False, scope='self_attention'):
+    logger.debug(f"self_attention_2 {scope}")
     with tf.variable_scope(scope):
         f = conv(x, channels // 8, kernel=1, stride=1, sn=sn, scope='f_conv')  # [bs, h, w, c']
         f = max_pooling(f)
@@ -314,8 +323,8 @@ def condition_batch_norm(x, z, is_training=True, scope='batch_norm'):
         test_mean = tf.get_variable("pop_mean", shape=[c], dtype=tf.float32, initializer=tf.constant_initializer(0.0), trainable=False)
         test_var = tf.get_variable("pop_var", shape=[c], dtype=tf.float32, initializer=tf.constant_initializer(1.0), trainable=False)
 
-        beta = fully_conneted(z, units=c, scope='beta')
-        gamma = fully_conneted(z, units=c, scope='gamma')
+        beta = fully_connected(z, units=c, scope='beta')
+        gamma = fully_connected(z, units=c, scope='gamma')
 
         beta = tf.reshape(beta, shape=[-1, 1, 1, c])
         gamma = tf.reshape(gamma, shape=[-1, 1, 1, c])

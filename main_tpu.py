@@ -12,6 +12,12 @@ import logging
 import coloredlogs
 logger = logging.getLogger(__name__)
 coloredlogs.install(level='INFO', logger=logger)
+coloredlogs.install(level='DEBUG', logger=logging.getLogger('ops'))
+coloredlogs.install(level='DEBUG', logger=logging.getLogger('utils'))
+coloredlogs.install(level='DEBUG', logger=logging.getLogger('BigGAN_128'))
+
+
+
 
 from utils import *
 
@@ -39,14 +45,17 @@ def parse_args():
 	parser.add_argument('--eval-steps'      , type=int             , default=100                               , help='The number of eval iterations')
 	parser.add_argument('--batch-size'      , type=int             , default=2048  , dest="_batch_size"        , help='The size of batch across all GPUs')
 	parser.add_argument('--ch'              , type=int             , default=96                                , help='base channel number per layer')
+	parser.add_argument('--layers'          , type=int             , default=5 )
 
 	parser.add_argument('--use-tpu'         , action='store_true')
-	parser.add_argument('--tpu-name'        , action='append'      , default=[] , type=str             )
+	parser.add_argument('--tpu-name'        , action='append'      , default=[] )
 	parser.add_argument('--tpu-zone'		, type=str, default='us-central1-f')
 	parser.add_argument('--num-shards'      , type=int             , default=8) # A single TPU has 8 shards
 	parser.add_argument('--steps-per-loop'  , type=int             , default=10000)
 
-	parser.add_argument('--disable-self-attn', action='store_false',dest='use_self_attn')
+	parser.add_argument('--disable-comet'   , action='store_false', dest='use_comet')
+
+	parser.add_argument('--self-attn-res'   , action='append', default=[64] )
 
 	parser.add_argument('--g-lr'            , type=float           , default=0.00005                           , help='learning rate for generator')
 	parser.add_argument('--d-lr'            , type=float           , default=0.0002                            , help='learning rate for discriminator')
@@ -210,10 +219,13 @@ def main():
 
 	total_steps = 0
 
-	experiment = Experiment(api_key="bRptcjkrwOuba29GcyiNaGDbj", project_name="BigGAN", workspace="davidhughhenrymack")
-	experiment.log_parameters(vars(args))
-	experiment.add_tags(args.tag)
-	experiment.set_name(model_name(args))
+	if args.use_comet:
+		experiment = Experiment(api_key="bRptcjkrwOuba29GcyiNaGDbj", project_name="BigGAN", workspace="davidhughhenrymack")
+		experiment.log_parameters(vars(args))
+		experiment.add_tags(args.tag)
+		experiment.set_name(model_name(args))
+	else:
+		experiment = None
 
 	if args.phase == 'train':
 		for epoch in range(args.epochs):

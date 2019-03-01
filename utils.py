@@ -10,6 +10,9 @@ import tensorflow.contrib.slim as slim
 
 from inception_score import calculate_inception_score
 
+import logging
+logger = logging.getLogger(__name__)
+
 class EasyDict(dict):
     def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
     def __getattr__(self, name): return self[name]
@@ -94,7 +97,7 @@ def save_predictions(args, result_dir, predictions, epoch, total_steps, experime
         return
 
     else:
-        tf.logging.info(f"Saving grid of {len(samples)} predictions")
+        logger.info(f"Saving grid of {len(samples)} predictions")
 
     samples = np.array(samples)
     grid_samples = samples[:image_frame_dim * image_frame_dim, :, :, :]
@@ -107,15 +110,17 @@ def save_predictions(args, result_dir, predictions, epoch, total_steps, experime
         with tf.gfile.Open(file_path, 'wb') as file:
             imageio.imwrite(file, grid_image, format="png")
 
-    tmp_file_path = "./temp/latest_sample.png"
-    imageio.imwrite(tmp_file_path, grid_image)
-    experiment.log_image(tmp_file_path)
+    if args.use_comet:
+        tmp_file_path = "./temp/latest_sample.png"
+        imageio.imwrite(tmp_file_path, grid_image)
+        experiment.log_image(tmp_file_path)
 
     inception_score = calculate_inception_score(samples)
 
-    print(f"step {total_steps}\t inception_score={inception_score}")
+    logger.info(f"step {total_steps}\t inception_score={inception_score}")
 
-    experiment.log_metric('inception_score', inception_score)
+    if args.use_comet:
+        experiment.log_metric('inception_score', inception_score)
 
     file_path = os.path.join(result_dir, "eval.txt")
 

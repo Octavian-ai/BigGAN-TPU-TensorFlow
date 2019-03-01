@@ -4,6 +4,8 @@ from utils import *
 from tensorflow.contrib.data import prefetch_to_device, shuffle_and_repeat, map_and_batch
 from tensorflow.contrib.opt import MovingAverageOptimizer
 
+import logging
+logger = logging.getLogger(__name__)
 
 class BigGAN_128(object):
 
@@ -16,6 +18,7 @@ class BigGAN_128(object):
 	##################################################################################
 
 	def generator(self, params, z, is_training=True, reuse=False):
+		logger.debug("generator")
 		with tf.variable_scope("generator", reuse=reuse):
 			# 6
 			if params['z_dim'] == 128:
@@ -36,33 +39,28 @@ class BigGAN_128(object):
 			ch = 16 * params['ch']
 			sn = params['sn']
 
-			x = fully_conneted(z_split[0], units=4 * 4 * ch, sn=sn, scope='dense')
+			x = fully_connected(z_split[0], units=4 * 4 * ch, sn=sn, scope='dense')
 			x = tf.reshape(x, shape=[-1, 4, 4, ch])
 
-			x = resblock_up_condition(x, z_split[1], channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_up_16')
-			ch = ch // 2
+			for i in range(params['layers']):
+				x_size = x.shape[-2]
+				x = resblock_up_condition(x, z_split[i], channels=ch, use_bias=False, is_training=is_training, sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
+				
+				x_size = x.shape[-2]
+				if x_size in params['self_attn_res']:
+					x = self_attention_2(x, channels=ch, sn=sn, scope=f"self_attention_w{x_size}_ch{ch//params['ch']}")
 
-			x = resblock_up_condition(x, z_split[2], channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_up_8')
-			ch = ch // 2
+				ch = ch // 2
 
-			x = resblock_up_condition(x, z_split[3], channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_up_4')
-			ch = ch // 2
-
-			x = resblock_up_condition(x, z_split[4], channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_up_2')
-
-			if params['use_self_attn']:
-				# Non-Local Block
-				x = self_attention_2(x, channels=ch, sn=sn, scope='self_attention')
-		
-			ch = ch // 2
-
-			x = resblock_up_condition(x, z_split[5], channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_up_1')
+			ch = ch * 2
 
 			x = batch_norm(x, is_training)
 			x = relu(x)
 			x = conv(x, channels=params['img_ch'], kernel=3, stride=1, pad=1, use_bias=False, sn=sn, scope='G_logit')
 
 			x = tanh(x)
+
+			logger.debug("--")
 
 			return x
 
@@ -71,35 +69,33 @@ class BigGAN_128(object):
 	##################################################################################
 
 	def discriminator(self, params, x, is_training=True, reuse=False):
+		logger.debug("discriminator")
 		with tf.variable_scope("discriminator", reuse=reuse):
 			ch = params['ch']
 			sn = params['sn']
 
-			x = resblock_down(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_down_1')
+			for i in range(params['layers']):
 
-			if params['use_self_attn']:
-				# Non-Local Block
-				x = self_attention_2(x, channels=ch, sn=sn, scope='self_attention')
-			
-			ch = ch * 2
+				x_size = x.shape[-2]
+				x = resblock_down(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope=f"resblock_down_w{x_size}_ch{ch//params['ch']}")
 
-			x = resblock_down(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_down_2')
-			ch = ch * 2
+				x_size = x.shape[-2]
+				if x_size in params['self_attn_res']:
+					x = self_attention_2(x, channels=ch, sn=sn, scope=f"self_attention_w{x_size}_ch{ch//params['ch']}")
+				
+				ch = ch * 2
 
-			x = resblock_down(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_down_4')
-			ch = ch * 2
+			ch = ch // 2
 
-			x = resblock_down(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_down_8')
-			ch = ch * 2
-
-			x = resblock_down(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock_down_16')
-
-			x = resblock(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope='resblock')
+			x_size = x.shape[-2]
+			x = resblock(x, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope=f"resblock_w{x_size}_ch{ch//params['ch']}")
 			x = relu(x)
 
 			x = global_sum_pooling(x)
 
-			x = fully_conneted(x, units=1, sn=sn, scope='D_logit')
+			x = fully_connected(x, units=1, sn=sn, scope='D_logit')
+
+			logger.debug("--")
 
 			return x
 
