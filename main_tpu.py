@@ -50,7 +50,7 @@ def parse_args():
 
 	parser.add_argument('--disable-comet'   , action='store_false', dest='use_comet')
 
-	parser.add_argument('--self-attn-res'   , action='append', default=[64] )
+	parser.add_argument('--self-attn-res'   , action='append', default=[] )
 
 	parser.add_argument('--g-lr'            , type=float           , default=0.00005                           , help='learning rate for generator')
 	parser.add_argument('--d-lr'            , type=float           , default=0.0002                            , help='learning rate for discriminator')
