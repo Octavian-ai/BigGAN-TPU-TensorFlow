@@ -93,6 +93,9 @@ def check_args(args):
 	assert args._batch_size >= 1, "batch size must be larger than or equal to one"
 	assert args.ch >= 8, "--ch cannot be less than 8 otherwise some dimensions of the network will be size 0"
 
+	if args.use_tpu:
+		assert len(args.tpu_name) > 0, "Please provide at least one --tpu-name"
+
 	return args
 
 
