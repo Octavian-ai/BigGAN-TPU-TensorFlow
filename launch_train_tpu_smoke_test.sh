@@ -6,7 +6,7 @@ nohup pipenv run python3.6 main_tpu.py --use-tpu \
 	--result-dir ./results \
 	--batch-size 32  \
 	--verbosity INFO \
-	--steps-per-loop 50 \
+	--steps-per-loop 200 \
 	--train-steps 200 \
 	--eval-steps 10 \
 	--epochs 5 \
