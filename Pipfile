@@ -1,11 +1,16 @@
 [[source]]
+
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
+
 [dev-packages]
 
+
+
 [packages]
+
 tensorflow = "==1.12"
 scipy = "*"
 keras = "*"
@@ -14,6 +19,9 @@ google-api-python-client = "*"
 "oauth2client" = "*"
 coloredlogs = "*"
 cloud-tpu-profiler = "==1.12"
+comet-ml = "*"
+
 
 [requires]
+
 python_version = "3.6"

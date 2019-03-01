@@ -75,7 +75,7 @@ def normalize(x) :
 
 
 
-def save_predictions(args, result_dir, predictions, epoch, total_steps):
+def save_predictions(args, result_dir, predictions, epoch, total_steps, experiment):
 
     image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
     samples = []
@@ -98,14 +98,24 @@ def save_predictions(args, result_dir, predictions, epoch, total_steps):
 
     samples = np.array(samples)
     grid_samples = samples[:image_frame_dim * image_frame_dim, :, :, :]
+    grid_image = merge(inverse_transform(grid_samples), [image_frame_dim, image_frame_dim])
+    grid_image *= 255
+    grid_image = grid_image.astype(np.uint8)
 
     for filename in ['epoch%02d' % epoch + '_sample.png', 'latest_sample.png']:
         file_path = os.path.join(result_dir, filename)
         with tf.gfile.Open(file_path, 'wb') as file:
-            grid_image = merge(inverse_transform(grid_samples), [image_frame_dim, image_frame_dim])
             imageio.imwrite(file, grid_image, format="png")
 
+    tmp_file_path = "./temp/latest_sample.png"
+    imageio.imwrite(tmp_file_path, grid_image)
+    experiment.log_image(tmp_file_path)
+
     inception_score = calculate_inception_score(samples)
+
+    print(f"step {total_steps}\t inception_score={inception_score}")
+
+    experiment.log_metric('inception_score', inception_score)
 
     file_path = os.path.join(result_dir, "eval.txt")
 

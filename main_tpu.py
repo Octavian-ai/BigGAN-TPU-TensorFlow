@@ -1,6 +1,9 @@
-from BigGAN_512 import BigGAN_512
-from BigGAN_256 import BigGAN_256
+
+
+from comet_ml import Experiment
+
 from BigGAN_128 import BigGAN_128
+
 import argparse
 import subprocess
 import os.path
@@ -82,6 +85,7 @@ def suffixed_folder(args, dir):
 
 def check_args(args):
 	tf.gfile.MakeDirs(suffixed_folder(args, args.result_dir))
+	tf.gfile.MakeDirs("./temp/")
 
 	assert args.epochs >= 1, "number of epochs must be larger than or equal to one"
 	assert args._batch_size >= 1, "batch size must be larger than or equal to one"
@@ -206,14 +210,21 @@ def main():
 
 	total_steps = 0
 
+	experiment = Experiment(api_key="bRptcjkrwOuba29GcyiNaGDbj", project_name="BigGAN", workspace="davidhughhenrymack")
+	experiment.log_parameters(vars(args))
+	experiment.add_tags(args.tag)
+	experiment.set_name(model_name(args))
+
 	if args.phase == 'train':
 		for epoch in range(args.epochs):
 			logger.info(f"Training epoch {epoch}")
 			tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
 			total_steps += args.train_steps
+			experiment.set_step(total_steps)
 			
 			logger.info(f"Evaluate {epoch}")
 			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
+			experiment.log_metrics(evaluation)
 			logger.info(evaluation)
 			save_evaluation(args, suffixed_folder(args, args.result_dir), evaluation, epoch, total_steps)
 
@@ -221,7 +232,7 @@ def main():
 			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
 			
 			logger.info(f"Save predictions")
-			save_predictions(args, suffixed_folder(args, args.result_dir), predictions, epoch, total_steps)
+			save_predictions(args, suffixed_folder(args, args.result_dir), predictions, epoch, total_steps, experiment)
 
 
 
