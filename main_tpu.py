@@ -246,8 +246,8 @@ def main():
 			logger.info(evaluation)
 			save_evaluation(args, eval_file, evaluation, epoch, total_steps)
 
-			# logger.info(f"Generate predictions {epoch}")
-			# predictions = tpu_estimator.predict(input_fn=predict_input_fn)
+			logger.info(f"Generate predictions {epoch}")
+			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
 			
 			# logger.info(f"Save predictions")
 			# save_predictions(args, args.result_dir, eval_file, predictions, epoch, total_steps, experiment)
