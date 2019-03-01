@@ -3,6 +3,7 @@
 from comet_ml import Experiment
 
 from BigGAN_128 import BigGAN_128
+from inception_score import prefetch_inception_model
 
 import argparse
 import subprocess
@@ -226,6 +227,8 @@ def main():
 		experiment.set_name(model_name(args))
 	else:
 		experiment = None
+
+	prefetch_inception_model()
 
 	file_path = os.path.join(args.result_dir, "eval.txt")
 	with tf.gfile.Open(file_path, 'a') as eval_file:

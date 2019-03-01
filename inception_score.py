@@ -4,6 +4,14 @@ import numpy as np
 import tensorflow as tf
 
 
+def _generate_dummy_images(batch_size = 16, img_size = 128, channels = 3):
+	return np.random.random([batch_size, img_size, img_size, channels]) * 255.0
+
+def prefetch_inception_model():
+	images = _generate_dummy_images(batch_size=1)
+	calculate_inception_score(images)
+
+
 def calculate_inception_score(images):
 	'''
 		images:  Must be [batch, height, width, channels]. Values as float32 in range [0, 255]
@@ -24,11 +32,7 @@ def calculate_inception_score(images):
 class TestInceptionScore(unittest.TestCase):
 
     def test_basic(self):
-        batch_size = 16
-        img_size = 128
-        channels = 3
-
-        images = np.random.random([batch_size, img_size, img_size, channels]) * 255.0
+        images = _generate_dummy_images()
         score = calculate_inception_score(images) 
 
         self.assertIsInstance(score, float)
