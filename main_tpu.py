@@ -230,32 +230,28 @@ def main():
 
 	prefetch_inception_model()
 
-	file_path = os.path.join(args.result_dir, "eval.txt")
-	with tf.gfile.Open(file_path, 'a') as eval_file:
+	for epoch in range(args.epochs):
+		logger.info(f"Training epoch {epoch}")
+		tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
+		total_steps += args.train_steps
 
-		if args.phase == 'train':
-			for epoch in range(args.epochs):
-				logger.info(f"Training epoch {epoch}")
-				tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
-				total_steps += args.train_steps
+		if args.use_comet:
+			experiment.set_step(total_steps)
+		
+		logger.info(f"Evaluate {epoch}")
+		evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
+		
+		if args.use_comet:
+			experiment.log_metrics(evaluation)
+			
+		logger.info(evaluation)
+		save_evaluation(args, eval_file, evaluation, epoch, total_steps)
 
-				if args.use_comet:
-					experiment.set_step(total_steps)
-				
-				logger.info(f"Evaluate {epoch}")
-				evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
-				
-				if args.use_comet:
-					experiment.log_metrics(evaluation)
-					
-				logger.info(evaluation)
-				save_evaluation(args, eval_file, evaluation, epoch, total_steps)
-
-				logger.info(f"Generate predictions {epoch}")
-				predictions = tpu_estimator.predict(input_fn=predict_input_fn)
-				
-				logger.info(f"Save predictions")
-				save_predictions(args, args.result_dir, eval_file, predictions, epoch, total_steps, experiment)
+		# logger.info(f"Generate predictions {epoch}")
+		# predictions = tpu_estimator.predict(input_fn=predict_input_fn)
+		
+		# logger.info(f"Save predictions")
+		# save_predictions(args, args.result_dir, eval_file, predictions, epoch, total_steps, experiment)
 
 
 
