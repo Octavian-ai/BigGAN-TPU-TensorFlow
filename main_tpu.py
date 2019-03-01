@@ -162,21 +162,20 @@ def predict_input_fn(params):
 def setup_logging(args):
 
 	coloredlogs.install(level='INFO', logger=logger)
-	coloredlogs.install(level='DEBUG', logger=logging.getLogger('ops'))
-	coloredlogs.install(level='DEBUG', logger=logging.getLogger('utils'))
-	coloredlogs.install(level='DEBUG', logger=logging.getLogger('BigGAN_128'))
+	coloredlogs.install(level='INFO', logger=logging.getLogger('ops'))
+	coloredlogs.install(level='INFO', logger=logging.getLogger('utils'))
+	coloredlogs.install(level='INFO', logger=logging.getLogger('BigGAN_128'))
 
 	tf.logging.set_verbosity(args.verbosity)
 
-	log = logging.getLogger()
-	log_path = os.path.join(suffixed_folder(args, args.result_dir), 'log.txt')
-	stream = tf.gfile.Open(log_path, 'w+')
-	fh = logging.StreamHandler(stream=stream)
-	fh.setLevel(logging.INFO)
-
-	formatter = logging.Formatter('%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s')
-	fh.setFormatter(formatter)
-	log.addHandler(fh)
+	# log = logging.getLogger()
+	# log_path = os.path.join(suffixed_folder(args, args.result_dir), 'log.txt')
+	# stream = tf.gfile.Open(log_path, 'a')
+	# fh = logging.StreamHandler(stream=stream)
+	# fh.setLevel(logging.INFO)
+	# formatter = logging.Formatter('%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s')
+	# fh.setFormatter(formatter)
+	# log.addHandler(fh)
 
 	logger.info(f"cmd args: {vars(args)}")
 
@@ -228,24 +227,32 @@ def main():
 	else:
 		experiment = None
 
-	if args.phase == 'train':
-		for epoch in range(args.epochs):
-			logger.info(f"Training epoch {epoch}")
-			tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
-			total_steps += args.train_steps
-			experiment.set_step(total_steps)
-			
-			logger.info(f"Evaluate {epoch}")
-			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
-			experiment.log_metrics(evaluation)
-			logger.info(evaluation)
-			save_evaluation(args, suffixed_folder(args, args.result_dir), evaluation, epoch, total_steps)
+	file_path = os.path.join(args.result_dir, "eval.txt")
+	with tf.gfile.Open(file_path, 'a') as eval_file:
 
-			logger.info(f"Generate predictions {epoch}")
-			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
-			
-			logger.info(f"Save predictions")
-			save_predictions(args, suffixed_folder(args, args.result_dir), predictions, epoch, total_steps, experiment)
+		if args.phase == 'train':
+			for epoch in range(args.epochs):
+				logger.info(f"Training epoch {epoch}")
+				tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
+				total_steps += args.train_steps
+
+				if args.use_comet:
+					experiment.set_step(total_steps)
+				
+				logger.info(f"Evaluate {epoch}")
+				evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
+				
+				if args.use_comet:
+					experiment.log_metrics(evaluation)
+					
+				logger.info(evaluation)
+				save_evaluation(args, eval_file, evaluation, epoch, total_steps)
+
+				logger.info(f"Generate predictions {epoch}")
+				predictions = tpu_estimator.predict(input_fn=predict_input_fn)
+				
+				logger.info(f"Save predictions")
+				save_predictions(args, args.result_dir, eval_file, predictions, epoch, total_steps, experiment)
 
 
 

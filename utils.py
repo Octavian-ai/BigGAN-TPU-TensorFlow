@@ -107,7 +107,7 @@ def model_name(args):
 def suffixed_folder(args, dir):
     return os.path.join(dir, *args.tag, model_name(args))
 
-def save_predictions(args, result_dir, predictions, epoch, total_steps, experiment):
+def save_predictions(args, result_dir, eval_file, predictions, epoch, total_steps, experiment):
 
     image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
     samples = []
@@ -152,20 +152,15 @@ def save_predictions(args, result_dir, predictions, epoch, total_steps, experime
     if args.use_comet:
         experiment.log_metric('inception_score', inception_score)
 
-    file_path = os.path.join(result_dir, "eval.txt")
-
-    with tf.gfile.Open(file_path, 'a') as file:
-        file.write(f"Step {total_steps}\t inception_score={inception_score}\n")
+    
+    eval_file.write(f"Step {total_steps}\t inception_score={inception_score}\n")
 
 
 
 
 
-def save_evaluation(args, result_dir, evaluation, epoch, total_steps):
-    file_path = os.path.join(result_dir, "eval.txt")
-
-    with tf.gfile.Open(file_path, 'a') as file:
-        file.write(f"Step {total_steps}\t{evaluation}\n")
+def save_evaluation(args, eval_file, evaluation, epoch, total_steps):
+    eval_file.write(f"Step {total_steps}\t{evaluation}\n")
 
 
 def merge(images, size):
