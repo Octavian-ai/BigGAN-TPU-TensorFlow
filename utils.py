@@ -13,11 +13,17 @@ from inception_score import calculate_inception_score
 import logging
 logger = logging.getLogger(__name__)
 
+
 class EasyDict(dict):
     def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
     def __getattr__(self, name): return self[name]
     def __setattr__(self, name, value): self[name] = value
     def __delattr__(self, name): del self[name]
+
+
+# --------------------------------------------------------------------------
+# Input data
+# --------------------------------------------------------------------------
 
 class ImageData:
 
@@ -77,6 +83,29 @@ def normalize(x) :
     return x/127.5 - 1
 
 
+# --------------------------------------------------------------------------
+# Logging
+# --------------------------------------------------------------------------
+
+
+def model_name(args):
+    if args.sn :
+        sn = '_sn'
+    else :
+        sn = ''
+
+    mn = "{}_w{}_bs{}_ch{}_z{}{}".format(
+         args.gan_type, args.img_size, args._batch_size, args.ch, args.z_dim, sn)
+
+    for i in args.self_attn_res:
+        mn += f"_sa{i}"
+
+    return mn
+
+
+
+def suffixed_folder(args, dir):
+    return os.path.join(dir, *args.tag, model_name(args))
 
 def save_predictions(args, result_dir, predictions, epoch, total_steps, experiment):
 
@@ -116,8 +145,9 @@ def save_predictions(args, result_dir, predictions, epoch, total_steps, experime
         experiment.log_image(tmp_file_path)
 
     inception_score = calculate_inception_score(samples)
+    inception_score_dict = {'inception_score': inception_score}
 
-    logger.info(f"step {total_steps}\t inception_score={inception_score}")
+    logger.info(f"step {total_steps}\t{inception_score_dict}")
 
     if args.use_comet:
         experiment.log_metric('inception_score', inception_score)
@@ -135,7 +165,14 @@ def save_evaluation(args, result_dir, evaluation, epoch, total_steps):
     file_path = os.path.join(result_dir, "eval.txt")
 
     with tf.gfile.Open(file_path, 'a') as file:
-        file.write(f"Step {total_steps}\t {evaluation}\n")
+        file.write(f"Step {total_steps}\t{evaluation}\n")
+
+
+def log_args(args):
+    file_path = os.path.join(suffixed_folder(args, args.result_dir), "log.txt")
+
+    with tf.gfile.Open(file_path, 'a') as file:
+        file.write(f"{vars(args)}\n")
 
 
 

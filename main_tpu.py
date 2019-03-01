@@ -36,6 +36,7 @@ def parse_args():
 	# batch_size = 256
 	# base channel = 64
 	# epoch = 100 (1M iterations)
+	# self-attn-res = [64]
 
 	parser.add_argument('--img-size'        , type=int             , default=128                               , help='The width and height of the input/output image')
 	parser.add_argument('--img-ch'          , type=int             , default=3                                 , help='The number of channels in the input/output image')
@@ -88,8 +89,6 @@ def parse_args():
 	args = parser.parse_args()
 	return check_args(args)
 
-def suffixed_folder(args, dir):
-	return os.path.join(dir, *args.tag, model_name(args))
 
 
 def check_args(args):
@@ -103,19 +102,6 @@ def check_args(args):
 	return args
 
 
-def print_args(args):
-	logger.info(vars(args))
-
-
-
-def model_name(args):
-	if args.sn :
-		sn = '_sn'
-	else :
-		sn = ''
-
-	return "{}_{}_{}_{}_{}{}".format(
-		 args.gan_type, args.img_size, args._batch_size, args.ch, args.z_dim, sn)
 
 def model_dir(args):
 	return os.path.join(args.model_dir, *args.tag, model_name(args))
@@ -168,7 +154,6 @@ def eval_input_fn(params):
 	return generic_input_fn(params, params['train_input_path'], repeat=True)
 
 def predict_input_fn(params):
-
 	count = max(params['sample_num'], params['batch_size'], params['inception_score_num'])
 
 	data = np.zeros([count], dtype=np.float32)
@@ -178,13 +163,12 @@ def predict_input_fn(params):
 
 
 def main():
-	# parse arguments
 	args = parse_args()
 	if args is None:
 	  exit()
 
 	tf.logging.set_verbosity(args.verbosity)
-	# print_args(args)
+	log_args(args)
 
 	gan = BigGAN_128(args)
 
