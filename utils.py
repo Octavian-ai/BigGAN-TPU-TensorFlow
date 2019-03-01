@@ -8,6 +8,8 @@ import imageio
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
+from inception_score import calculate_inception_score
+
 class EasyDict(dict):
     def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
     def __getattr__(self, name): return self[name]
@@ -71,18 +73,16 @@ def preprocessing(x, size):
 def normalize(x) :
     return x/127.5 - 1
 
-def save_images(images, size, image_path):
-    return imsave(inverse_transform(images), size, image_path)
 
 
-def save_predictions(args, sample_dir, predictions, epoch):
+def save_predictions(args, result_dir, predictions, epoch, total_steps):
 
     image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
     samples = []
 
     try:
         for ct, i in enumerate(predictions):
-            if ct > args.sample_num:
+            if ct >= args.sample_num:
                 break
             samples.append(i['fake_image'])
     
@@ -97,16 +97,32 @@ def save_predictions(args, sample_dir, predictions, epoch):
         tf.logging.info(f"Saving grid of {len(samples)} predictions")
 
     samples = np.array(samples)
+    grid_samples = samples[:image_frame_dim * image_frame_dim, :, :, :]
 
     for filename in ['epoch%02d' % epoch + '_sample.png', 'latest_sample.png']:
-        save_images(samples[:image_frame_dim * image_frame_dim, :, :, :], [image_frame_dim, image_frame_dim],
-                        os.path.join(sample_dir, filename))
+        file_path = os.path.join(result_dir, filename)
+        with tf.gfile.Open(file_path, 'wb') as file:
+            grid_image = merge(inverse_transform(grid_samples), [image_frame_dim, image_frame_dim])
+            imageio.imwrite(file, grid_image, format="png")
 
-def save_evaluation(args, result_dir, evaluation, epoch):
-    file_path = os.path.join(result_dir, "log.txt")
+    inception_score = calculate_inception_score(samples)
 
-    with open(file_path, 'a') as file:
-        file.write(f"Epoch {epoch}: {evaluation}")
+    file_path = os.path.join(result_dir, "eval.txt")
+
+    with tf.gfile.Open(file_path, 'a') as file:
+        file.write(f"Step {total_steps}\t inception_score={inception_score}\n")
+
+
+
+
+
+def save_evaluation(args, result_dir, evaluation, epoch, total_steps):
+    file_path = os.path.join(result_dir, "eval.txt")
+
+    with tf.gfile.Open(file_path, 'a') as file:
+        file.write(f"Step {total_steps}\t {evaluation}\n")
+
+
 
 def merge(images, size):
     h, w = images.shape[1], images.shape[2]
@@ -128,20 +144,10 @@ def merge(images, size):
     else:
         raise ValueError('in merge(images,size) images parameter ''must have dimensions: HxW or HxWx3 or HxWx4')
 
-def imsave(images, size, path):
-    # image = np.squeeze(merge(images, size)) # 채널이 1인거 제거 ?
-    # return scipy.misc.imsave(path, merge(images, size))
-    return imageio.imwrite(path, merge(images, size))
-
 
 def inverse_transform(images):
     return (images+1.)/2.
 
-
-def check_folder(log_dir):
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    return log_dir
 
 def show_all_variables():
     model_vars = tf.trainable_variables()

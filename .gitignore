@@ -115,3 +115,4 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+frozen_inception_v1_2015_12_05.tar.gz
