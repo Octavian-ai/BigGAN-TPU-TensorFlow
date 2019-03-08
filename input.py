@@ -43,9 +43,21 @@ def eval_input_fn(params):
 
 def predict_input_fn(params):
 	count = max(params['sample_num'], params['batch_size'], params['inception_score_num'])
+	
+	# Empty since example images are not needed for prediction
+	# image_data = np.zeros([count], dtype=np.float32)
 
-	data = np.zeros([count], dtype=np.float32)
-	dataset = tf.data.Dataset.from_tensor_slices(data)
+	# Which labels to generate
+	label_data = np.eye(params['num_labels'], dtype=np.float32)
+	label_data = np.repeat(label_data, 1 + (count // params['num_labels']), axis=0)
+	np.random.shuffle(label_data)
+	label_data = label_data[:count]
+
+	# print(label_data, label_data.shape)
+
+	# assert label_data.shape[0] == image_data.shape[0], "Number of examples must be the same"
+
+	dataset = tf.data.Dataset.from_tensor_slices(label_data)
 	dataset = dataset.batch(params['batch_size'], drop_remainder=True)
 	return dataset
 
@@ -100,7 +112,7 @@ def parse_tfrecord_inception(params, is_training, record):
 	image = image_preprocessing(image_buffer, bbox, is_training, params['img_size'])
 	# [batch, height, width, channels] range(-1.0,1.0)
 
-	label_one_hot = tf.one_hot(label, params['num_labels'], dtype=image.dtype)
+	label_one_hot = tf.one_hot(tf.squeeze(label, axis=-1), params['num_labels'], dtype=image.dtype)
 
 	return image, label_one_hot
 

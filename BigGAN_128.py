@@ -44,7 +44,8 @@ class BigGAN_128(object):
 
 			for i in range(params['layers']):
 				x_size = x.shape[-2]
-				x = resblock_up_condition(x, z_split[i], labels=labels, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
+				cond = tf.concat([z_split[i], labels], axis=-1)
+				x = resblock_up_condition(x, cond, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
 				
 				x_size = x.shape[-2]
 				if x_size in params['self_attn_res']:
@@ -131,12 +132,22 @@ class BigGAN_128(object):
 	##################################################################################
 
 	def base_model_fn(self, features, labels, mode, params):
+
+		# Because we cannot pass in labels in predict mode (despite them being useful 
+		# for GANs), I've passed the labels in as the (otherwise unneeded) features
+		# it's a bit of a hack, sorry.
+		if mode == tf.estimator.ModeKeys.PREDICT:
+			labels = features
 		
 		# Latent input to generate images
 		z = tf.truncated_normal(shape=[params.batch_size, 1, 1, params.z_dim], name='random_z')
+		
+		# Conditioning of the batch normalization based on image label
+		labels_expanded = tf.expand_dims(labels, 1)
+		labels_expanded = tf.expand_dims(labels_expanded, 1)
 
 		# generate and critique fake images
-		fake_images = self.generator(params, z)
+		fake_images = self.generator(params, z, labels_expanded)
 		fake_logits = self.discriminator(params, fake_images)
 		g_loss = generator_loss(params.gan_type, fake=fake_logits)
 

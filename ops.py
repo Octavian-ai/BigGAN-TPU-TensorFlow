@@ -181,16 +181,16 @@ def resblock_up(x_init, channels, use_bias=True, is_training=True, sn=False, sco
 
     return x + x_init
 
-def resblock_up_condition(x_init, z, channels, use_bias=True, is_training=True, sn=False, scope='resblock_up'):
+def resblock_up_condition(x_init, cond, channels, use_bias=True, is_training=True, sn=False, scope='resblock_up'):
     logger.debug(f"resblock_up_condition {scope}")
     with tf.variable_scope(scope):
         with tf.variable_scope('res1'):
-            x = condition_batch_norm(x_init, z, is_training)
+            x = condition_batch_norm(x_init, cond, is_training)
             x = relu(x)
             x = deconv(x, channels, kernel=3, stride=2, use_bias=use_bias, sn=sn)
 
         with tf.variable_scope('res2') :
-            x = condition_batch_norm(x, z, is_training)
+            x = condition_batch_norm(x, cond, is_training)
             x = relu(x)
             x = deconv(x, channels, kernel=3, stride=1, use_bias=use_bias, sn=sn)
 
@@ -308,6 +308,7 @@ def tanh(x):
 ##################################################################################
 
 def batch_norm(x, is_training=True, scope='batch_norm'):
+    # TODO: replace with tf.nn.batch_normalization(x, batch_mean, batch_var, beta, gamma, epsilon)
     return tf.layers.batch_normalization(x,
                                          momentum=0.9,
                                          epsilon=1e-05,
