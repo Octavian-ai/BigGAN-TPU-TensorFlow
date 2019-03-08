@@ -2,6 +2,8 @@
 
 Simple Tensorflow TPU implementation of ["Large Scale GAN Training for High Fidelity Natural Image Synthesis" (BigGAN)](https://arxiv.org/abs/1809.11096)
 
+I (David Mack) have been modifying this network to allow for configuration of its self-attention, to facilitate experiments into the effectiveness of different self-attention architectures.
+
 ![main](./assets/main.png)
 
 ## Implementation notes/issues
