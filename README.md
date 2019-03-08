@@ -8,9 +8,11 @@ I (David Mack) have been modifying this network to allow for configuration of it
 
 ## Implementation notes/issues
 
-- This is a half-finished TPU conversion of [Junho Kim's](https://github.com/taki0112/BigGAN-Tensorflow) implementation. Only 128x128 supported
-- **The paper** used `orthogonal initialization`, but `I used random normal initialization.` The reason is, when using the orthogonal initialization, it did not train properly.
-- I have applied a hierarchical latent space, but **not** a class embeddedding.
+- TODO: Implement BigGAN-deep architecture (simpler class embedding, deeper resblock)
+- TODO: Refactor BigGAN_256.py and BigGAN_512.py to TPU compatable code (for example, see BigGAN128.py)
+- TODO: Explore whether `orthogonal initialization` (paper's method) should be used instead of `random normal initialization` (current implementation)
+- TODO: Implement class embedding
+- TODO: Ensure BatchNorm is applied across all TPUs, not per-TPU
 
 ## Usage
 

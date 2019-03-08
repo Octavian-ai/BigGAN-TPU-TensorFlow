@@ -88,7 +88,7 @@ def main():
 			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
 			
 			logger.info(f"Save predictions")
-			save_predictions(args, args.result_dir, eval_file, predictions, epoch, total_steps, experiment)
+			save_predictions(args, suffixed_folder(args, args.result_dir), eval_file, predictions, epoch, total_steps, experiment)
 
 
 
