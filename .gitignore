@@ -9,7 +9,7 @@ nohup*
 model
 samples
 results
-datasets
+datasets*
 logs
 dataset
 checkpoint

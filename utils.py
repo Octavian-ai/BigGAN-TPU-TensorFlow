@@ -87,18 +87,22 @@ def normalize(x) :
 # Logging
 # --------------------------------------------------------------------------
 
+def str2bool(x):
+    return x.lower() in ('true')
 
 def model_name(args):
+    mn = ""
+
+    for i in args.self_attn_res:
+        mn += f"sa{i}_"
+
     if args.sn :
         sn = '_sn'
     else :
         sn = ''
 
-    mn = "{}_w{}_bs{}_ch{}_z{}{}".format(
+    mn += "{}_w{}_bs{}_ch{}_z{}{}".format(
          args.gan_type, args.img_size, args._batch_size, args.ch, args.z_dim, sn)
-
-    for i in args.self_attn_res:
-        mn += f"_sa{i}"
 
     return mn
 
@@ -192,8 +196,7 @@ def show_all_variables():
     model_vars = tf.trainable_variables()
     slim.model_analyzer.analyze_vars(model_vars, print_info=True)
 
-def str2bool(x):
-    return x.lower() in ('true')
+
 
 ##################################################################################
 # Regularization
