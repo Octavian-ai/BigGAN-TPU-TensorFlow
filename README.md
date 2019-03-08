@@ -8,11 +8,11 @@ I (David Mack) have been modifying this network to allow for configuration of it
 
 ## Implementation notes/issues
 
+- TODO: Implement class embedding
+- TODO: Ensure BatchNorm is applied across all TPUs, not per-TPU
 - TODO: Implement BigGAN-deep architecture (simpler class embedding, deeper resblock)
 - TODO: Refactor BigGAN_256.py and BigGAN_512.py to TPU compatable code (for example, see BigGAN128.py)
 - TODO: Explore whether `orthogonal initialization` (paper's method) should be used instead of `random normal initialization` (current implementation)
-- TODO: Implement class embedding
-- TODO: Ensure BatchNorm is applied across all TPUs, not per-TPU
 
 ## Usage
 

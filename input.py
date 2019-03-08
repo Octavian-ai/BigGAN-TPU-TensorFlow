@@ -82,7 +82,7 @@ def parse_tfrecord_progan(params, record):
 	img = tf.transpose(img, [1,2,0]) # CHW => HWC
 	img = tf.cast(img, tf.float32) / 127.5 - 1
 
-	empty_label = tf.constant([params['batch_size'], 1], dtype=tf.int64)
+	empty_label = tf.constant([params['batch_size'], params['num_labels']], dtype=tf.int64)
 
 	return img, empty_label
 
@@ -100,6 +100,8 @@ def parse_tfrecord_inception(params, is_training, record):
 	image = image_preprocessing(image_buffer, bbox, is_training, params['img_size'])
 	# [batch, height, width, channels] range(-1.0,1.0)
 
-	return image, label
+	label_one_hot = tf.one_hot(label, params['num_labels'], dtype=image.dtype)
+
+	return image, label_one_hot
 
 

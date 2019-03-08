@@ -321,18 +321,19 @@ def condition_batch_norm(x, z, is_training=True, scope='batch_norm'):
         epsilon = 1e-05
 
         test_mean = tf.get_variable("pop_mean", shape=[c], dtype=tf.float32, initializer=tf.constant_initializer(0.0), trainable=False)
-        test_var = tf.get_variable("pop_var", shape=[c], dtype=tf.float32, initializer=tf.constant_initializer(1.0), trainable=False)
+        test_var  = tf.get_variable("pop_var",  shape=[c], dtype=tf.float32, initializer=tf.constant_initializer(1.0), trainable=False)
 
-        beta = fully_connected(z, units=c, scope='beta')
+        beta  = fully_connected(z, units=c, scope='beta')
         gamma = fully_connected(z, units=c, scope='gamma')
 
-        beta = tf.reshape(beta, shape=[-1, 1, 1, c])
+        beta  = tf.reshape(beta,  shape=[-1, 1, 1, c])
         gamma = tf.reshape(gamma, shape=[-1, 1, 1, c])
 
         if is_training:
+            # Update exponential moving averages of the batch mean and var
             batch_mean, batch_var = tf.nn.moments(x, [0, 1, 2])
             ema_mean = tf.assign(test_mean, test_mean * decay + batch_mean * (1 - decay))
-            ema_var = tf.assign(test_var, test_var * decay + batch_var * (1 - decay))
+            ema_var  = tf.assign(test_var,  test_var  * decay + batch_var  * (1 - decay))
 
             with tf.control_dependencies([ema_mean, ema_var]):
                 return tf.nn.batch_normalization(x, batch_mean, batch_var, beta, gamma, epsilon)

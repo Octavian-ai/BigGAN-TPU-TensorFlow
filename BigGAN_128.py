@@ -17,7 +17,7 @@ class BigGAN_128(object):
 	# Generator
 	##################################################################################
 
-	def generator(self, params, z, is_training=True, reuse=False):
+	def generator(self, params, z, labels, is_training=True, reuse=False):
 		logger.debug("generator")
 		with tf.variable_scope("generator", reuse=reuse):
 			# 6
@@ -44,7 +44,7 @@ class BigGAN_128(object):
 
 			for i in range(params['layers']):
 				x_size = x.shape[-2]
-				x = resblock_up_condition(x, z_split[i], channels=ch, use_bias=False, is_training=is_training, sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
+				x = resblock_up_condition(x, z_split[i], labels=labels, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
 				
 				x_size = x.shape[-2]
 				if x_size in params['self_attn_res']:

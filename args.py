@@ -25,6 +25,7 @@ def parse_args():
 	parser.add_argument('--train-input-path' , type=str        , default='./datasets/imagenet/train*')
 	parser.add_argument('--eval-input-path'  , type=str        , default='./datasets/imagenet/validate*')
 	parser.add_argument('--tfr-format'       , type=str        , default='inception', choices=['inception', 'progan'])
+	parser.add_argument('--num-labels'       , type=int        , default=1000, help="Number of different possible labels")
 
 	parser.add_argument('--model-dir'        , type=str        , default='model')
 	parser.add_argument('--result-dir'       , type=str        , default='results')
