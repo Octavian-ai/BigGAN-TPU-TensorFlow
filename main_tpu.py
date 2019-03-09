@@ -59,7 +59,7 @@ def main():
 	total_steps = 0
 
 	if args.use_comet:
-		experiment = Experiment(api_key="bRptcjkrwOuba29GcyiNaGDbj", project_name="BigGAN", workspace="davidhughhenrymack")
+		experiment = Experiment(api_key=comet_ml_api_key, project_name=comet_ml_project, workspace=comet_ml_workspace)
 		experiment.log_parameters(vars(args))
 		experiment.add_tags(args.tag)
 		experiment.set_name(model_name(args))

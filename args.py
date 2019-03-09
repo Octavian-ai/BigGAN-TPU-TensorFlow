@@ -7,12 +7,18 @@ import tensorflow as tf
 import argparse
 import subprocess
 import os.path
+import os
 
 import logging
 import coloredlogs
 logger = logging.getLogger(__name__)
 
 from utils import *
+
+
+comet_ml_api_key 	= os.environ.get("COMET_ML_API_KEY", 	None)
+comet_ml_workspace 	= os.environ.get("COMET_ML_WORKSPACE", 	None)
+comet_ml_project 	= os.environ.get("COMET_ML_PROJECT", 	"BigGAN")
 
 
 """parsing and configuration"""
@@ -104,14 +110,16 @@ def check_args(args):
 	if args.use_tpu:
 		assert len(args.tpu_name) > 0, "Please provide at least one --tpu-name"
 
+	if args.use_comet:
+		assert comet_ml_api_key is not None,   "Please provide your comet API key as $COMET_ML_API_KEY or specify --disable-comet. Comet is a cloud ML experiment visualisation platform."
+		assert comet_ml_workspace is not None, "Please provide your comet API key as $COMET_ML_WORKSPACE or specify --disable-comet. Comet is a cloud ML experiment visualisation platform."
+
 	return args
 
 
 
 def model_dir(args):
 	return os.path.join(args.model_dir, *args.tag, model_name(args))
-
-
 
 
 

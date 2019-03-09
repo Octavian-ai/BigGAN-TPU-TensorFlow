@@ -25,7 +25,7 @@ You can also use the data build script from [NVidia's Progressive Growing of GAN
 
 You can train on a Google TPU by setting the name of your TPU as an env var and running one of the training scripts. For example,
 
-* `TPU_NAME=node-1 pipenv run ./launch_train_tpu_b128.sh`
+* `./launch_train_tpu_b128.sh --tpu-name node-1`
 
 You need to have your training data stored on a Google cloud bucket.
 
