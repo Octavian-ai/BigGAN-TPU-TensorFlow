@@ -172,13 +172,6 @@ class BigGAN_128(object):
 
 		return d_loss, d_vars, g_loss, g_vars, fake_images, fake_logits, z
 
-		
-	def tpu_metric_fn(self, d_loss, g_loss, fake_logits):
-		return {
-			"d_loss"      : tf.metrics.mean(d_loss),
-			"g_loss"      : tf.metrics.mean(g_loss),
-			"fake_logits" : tf.metrics.mean(fake_logits),
-		}
 
 	def tpu_model_fn(self, features, labels, mode, params):
 
@@ -214,12 +207,32 @@ class BigGAN_128(object):
 			d_loss_batched = tf.tile(tf.expand_dims(d_loss, 0), [params.batch_size])
 			g_loss_batched = tf.tile(tf.expand_dims(g_loss, 0), [params.batch_size])
 
+			d_grad = tf.gradients(d_loss, d_vars)
+			g_grad = tf.gradients(g_loss, g_vars)
+
+			d_grad_joined = tf.concat([
+				tf.reshape(i, [-1]) for i in d_grad
+			], axis=-1)
+
+			g_grad_joined = tf.concat([
+				tf.reshape(i, [-1]) for i in g_grad
+			], axis=-1)
+
+			def tpu_metric_fn(d_loss, g_loss, fake_logits, d_grad, g_grad):
+				return {
+					"d_loss"      : tf.metrics.mean(d_loss),
+					"g_loss"      : tf.metrics.mean(g_loss),
+					"fake_logits" : tf.metrics.mean(fake_logits),
+					"d_grad"      : tf.metrics.mean(d_grad_joined),
+					"g_grad"      : tf.metrics.mean(g_grad_joined),
+				}
+
 			return tf.contrib.tpu.TPUEstimatorSpec(
 				mode=mode,
 				loss=loss, 
 				eval_metrics=(
-					lambda d_loss, g_loss, fake_logits: self.tpu_metric_fn(d_loss, g_loss, fake_logits), 
-					[d_loss_batched, g_loss_batched, fake_logits]
+					tpu_metric_fn, 
+					[d_loss_batched, g_loss_batched, fake_logits, d_grad, g_grad]
 				)
 			)
 
