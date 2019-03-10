@@ -86,7 +86,7 @@ def eval_input_fn(params):
 	return generic_input_fn(params, params['eval_input_path'], repeat=True)
 
 def predict_input_fn(params):
-	count = max(params['sample_num'], params['batch_size'], params['inception_score_num'])
+	count = max(params['num_samples'], params['batch_size'], params['inception_score_sample_size'])
 	
 	# Which labels to generate
 	label_data = np.eye(params['num_labels'], dtype=np.float32)

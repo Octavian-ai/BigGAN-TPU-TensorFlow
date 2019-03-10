@@ -61,23 +61,6 @@ def load_cifar10():
 
     return x
 
-def load_data(dataset_name) :
-    if dataset_name == 'mnist' :
-        x = load_mnist()
-    elif dataset_name == 'cifar10' :
-        x = load_cifar10()
-    else :
-
-        x = glob(os.path.join("./dataset", dataset_name, '*.*'))
-
-    return x
-
-
-def preprocessing(x, size):
-    x = scipy.misc.imread(x, mode='RGB')
-    x = scipy.misc.imresize(x, [size, size])
-    x = normalize(x)
-    return x
 
 def normalize(x) :
     return x/127.5 - 1
@@ -113,12 +96,12 @@ def suffixed_folder(args, dir):
 
 def save_predictions(args, result_dir, eval_file, predictions, epoch, total_steps, experiment):
 
-    image_frame_dim = int(np.floor(np.sqrt(args.sample_num)))
+    image_frame_dim = int(np.floor(np.sqrt(args.num_samples)))
     samples = []
 
     try:
         for ct, i in enumerate(predictions):
-            if ct >= args.sample_num:
+            if ct >= args.num_samples:
                 break
             samples.append(i['fake_image'])
     

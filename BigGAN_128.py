@@ -223,8 +223,8 @@ class BigGAN_128(object):
 					"d_loss"      : tf.metrics.mean(d_loss),
 					"g_loss"      : tf.metrics.mean(g_loss),
 					"fake_logits" : tf.metrics.mean(fake_logits),
-					"d_grad"      : tf.metrics.mean(d_grad_joined),
-					"g_grad"      : tf.metrics.mean(g_grad_joined),
+					"d_grad"      : tf.metrics.mean(d_grad),
+					"g_grad"      : tf.metrics.mean(g_grad),
 				}
 
 			return tf.contrib.tpu.TPUEstimatorSpec(
@@ -232,7 +232,7 @@ class BigGAN_128(object):
 				loss=loss, 
 				eval_metrics=(
 					tpu_metric_fn, 
-					[d_loss_batched, g_loss_batched, fake_logits, d_grad, g_grad]
+					[d_loss_batched, g_loss_batched, fake_logits, d_grad_joined, g_grad_joined]
 				)
 			)
 
