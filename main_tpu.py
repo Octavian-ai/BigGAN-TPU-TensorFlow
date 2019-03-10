@@ -20,9 +20,6 @@ from args  import *
 
 def main():
 	args = parse_args()
-	if args is None:
-	  exit()
-
 	setup_logging(args)
 
 	gan = BigGAN_128(args)
