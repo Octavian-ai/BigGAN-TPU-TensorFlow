@@ -36,6 +36,8 @@ def parse_args():
 
 	parser.add_argument('--model-dir'        , type=str        , default='model')
 	parser.add_argument('--result-dir'       , type=str        , default='results')
+	parser.add_argument('--data-dir'         , type=str        , default=None)
+
 
 	# SAGAN
 	# batch_size = 256

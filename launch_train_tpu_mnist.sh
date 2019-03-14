@@ -3,6 +3,7 @@
 nohup pipenv run python main_tpu.py \
 	--use-tpu \
 	--model-dir gs://octavian-training2/gan/mnist/model \
+	--data-dir gs://octavian-training2/gan/mnist/data \
 	--result-dir ./results \
 	--data-source mnist \
 	--img-size 28 \
