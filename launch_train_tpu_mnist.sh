@@ -10,8 +10,8 @@ nohup pipenv run python main_tpu.py \
 	--img-ch 1 \
 	--num-labels 10 \
 	--steps-per-loop 500 \
-	--train-steps 1875 \
-	--eval-steps 40 \
+	--train-examples 60000 \
+	--eval-examples 10000 \
 	--batch-size 32 \
 	--ch 96 \
 	--layers 3 \

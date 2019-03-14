@@ -14,8 +14,8 @@ nohup pipenv run python3.6 main_tpu.py --use-tpu \
 	--g-lr 0.0001 \
 	--d-lr 0.0004 \
 	--verbosity INFO \
-	--train-steps 9375 \
-	--eval-steps 391 \
+	--train-examples 1281167 \
+	--eval-examples 50000 \
 	--tag sagan-sm \
 	--tag run-$RANDOM \
 	$@ &

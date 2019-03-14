@@ -66,13 +66,14 @@ def tfr_input_fn(params, is_training):
 	return dataset
 
 def mnist_input_fn(params, is_training=True):
-	
+
 	dataset = tfds.load(
 		name="mnist", 
 		split=tfds.Split.TRAIN if is_training else tfds.Split.TEST,
 		data_dir=params['data_dir'])
 
 	dataset = dataset.shuffle(1024)
+	dataset = dataset.repeat()
 	dataset = dataset.batch(params['batch_size'], drop_remainder=True)
 	dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
 

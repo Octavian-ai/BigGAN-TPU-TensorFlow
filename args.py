@@ -49,12 +49,12 @@ def parse_args():
 	parser.add_argument('--img-ch'          , type=int             , default=3                                 , help='The number of channels in the input/output image')
 
 	parser.add_argument('--epochs'          , type=int             , default=1000000                           , help='The number of training iterations')
-	parser.add_argument('--train-steps'     , type=int             , default=10000                             , help='The number of training iterations')
-	parser.add_argument('--eval-steps'      , type=int             , default=100                               , help='The number of eval iterations')
+	parser.add_argument('--train-examples'  , type=int             , default=1281167                           , help='The number of training examples in the dataset (used to calculate steps per epoch). Default to ImageNet values')
+	parser.add_argument('--eval-examples'   , type=int             , default=50000                             , help='The number of eval examples in the dataset (used to calculate steps per epoch). Default to ImageNet values')
 	parser.add_argument('--batch-size'      , type=int             , default=2048  , dest="_batch_size"        , help='The size of batch across all GPUs')
+
 	parser.add_argument('--shuffle-buffer'  , type=int             , default=4000 )
 	
-
 	parser.add_argument('--ch'              , type=int             , default=96                                , help='base channel number per layer')
 	parser.add_argument('--layers'          , type=int             , default=5 )
 
@@ -96,7 +96,7 @@ def parse_args():
 	parser.add_argument('--inception-score-sample-size'     , type=int      , default=512            , help='The number of sample images to use in inception score')
 	parser.add_argument('--num-samples'     , type=int      , default=36            , help='The number of sample images to save')
 	
-	parser.add_argument('--verbosity', type=str, default='WARNING')
+	parser.add_argument('--verbosity', type=str, default='INFO')
 
 	args = parser.parse_args()
 	return check_args(args)
@@ -140,7 +140,7 @@ def setup_logging(args):
 	# Set to DEBUG to see a trace of the model layers being created
 	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('ops'))
 	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('BigGAN'))
-	
+
 	coloredlogs.install(level=args.verbosity, logger=logger)
 	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('main_tpu'))
 	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('utils'))

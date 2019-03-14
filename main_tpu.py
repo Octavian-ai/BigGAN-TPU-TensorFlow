@@ -9,6 +9,7 @@ from inception_score import prefetch_inception_model
 import argparse
 import subprocess
 import os.path
+import math
 
 import logging
 logger = logging.getLogger(__name__)
@@ -65,14 +66,18 @@ def main():
 
 	prefetch_inception_model()
 
+	train_steps = math.ceil(args.train_examples / args._batch_size)
+	eval_steps  = math.ceil(args.eval_examples  / args._batch_size)
+
 	with tf.gfile.Open(os.path.join(suffixed_folder(args, args.result_dir), "eval.txt"), "a") as eval_file:
 		for epoch in range(args.epochs):
+
 			logger.info(f"Training epoch {epoch}")
-			tpu_estimator.train(input_fn=train_input_fn, steps=args.train_steps)
-			total_steps += args.train_steps
+			tpu_estimator.train(input_fn=train_input_fn, steps=train_steps)
+			total_steps += train_steps
 			
 			logger.info(f"Evaluate {epoch}")
-			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=args.eval_steps)
+			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
 			
 			if args.use_comet:
 				experiment.set_step(total_steps)
