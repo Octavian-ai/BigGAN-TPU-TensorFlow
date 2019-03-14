@@ -15,6 +15,7 @@ nohup pipenv run python main_tpu.py \
 	--batch-size 32 \
 	--ch 96 \
 	--layers 3 \
+	--self-attn-res 16 \
 	--epoch 10000 \
 	--tag mnist \
 	--tag run-$RANDOM \
