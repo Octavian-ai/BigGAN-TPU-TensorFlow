@@ -8,10 +8,11 @@ I (David Mack) have been modifying this network to allow for configuration of it
 
 ## Implementation notes/issues
 
-- TODO: Ensure BatchNorm is applied across all TPUs, not per-TPU
+- TODO: Apply BatchNorm across all TPUs, not per-TPU
 - TODO: Implement BigGAN-deep architecture (simpler class embedding, deeper resblock)
-- TODO: Refactor BigGAN_256.py and BigGAN_512.py to TPU compatable code (for example, see BigGAN128.py)
+- TODO: Ensure `--layers 6` and `--layers 7` generate 256px and 512px architectures as per the paper
 - TODO: Explore whether `orthogonal initialization` (paper's method) should be used instead of `random normal initialization` (current implementation)
+- TODO: Implement exponential average batch norm sampling during prediction
 
 ## Usage
 
@@ -25,7 +26,7 @@ You can also use the data build script from [NVidia's Progressive Growing of GAN
 
 You can train on a Google TPU by setting the name of your TPU as an env var and running one of the training scripts. For example,
 
-* `./launch_train_tpu_b128.sh --tpu-name node-1`
+* `./launch_train_tpu_sagan.sh --tpu-name node-1`
 
 You need to have your training data stored on a Google cloud bucket.
 
