@@ -3,7 +3,7 @@
 from comet_ml import Experiment
 import tensorflow as tf
 
-from BigGAN_128 import BigGAN_128
+from BigGAN import BigGAN
 from inception_score import prefetch_inception_model
 
 import argparse
@@ -22,7 +22,7 @@ def main():
 	args = parse_args()
 	setup_logging(args)
 
-	gan = BigGAN_128(args)
+	gan = BigGAN(args)
 
 	if args.use_tpu:
 		cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(

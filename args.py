@@ -107,6 +107,11 @@ def check_args(args):
 	assert args._batch_size >= 1, "batch size must be larger than or equal to one"
 	assert args.ch >= 8, "--ch cannot be less than 8 otherwise some dimensions of the network will be size 0"
 
+	if args.data_source == "mnist":
+		assert args.img_ch == 1
+		assert args.img_size == 28
+		assert args.num_labels == 10
+
 	if args.use_tpu:
 		assert len(args.tpu_name) > 0, "Please provide at least one --tpu-name"
 
@@ -125,11 +130,13 @@ def model_dir(args):
 
 def setup_logging(args):
 
+	# Set to DEBUG to see a trace of the model layers being created
+	coloredlogs.install(level='INFO', logger=logging.getLogger('ops'))
+	coloredlogs.install(level='INFO', logger=logging.getLogger('BigGAN'))
+
 	coloredlogs.install(level='INFO', logger=logger)
 	coloredlogs.install(level='INFO', logger=logging.getLogger('main_tpu'))
-	coloredlogs.install(level='INFO', logger=logging.getLogger('ops'))
 	coloredlogs.install(level='INFO', logger=logging.getLogger('utils'))
-	coloredlogs.install(level='INFO', logger=logging.getLogger('BigGAN_128'))
 
 	tf.logging.set_verbosity(args.verbosity)
 

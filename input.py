@@ -1,6 +1,7 @@
 
 import tensorflow as tf
 import numpy as np
+import tensorflow_datasets as tfds
 
 import os.path
 import glob
@@ -20,70 +21,16 @@ e.g. 128x128, 256x256, 512x512, all with three channels
 
 """
 
-class InputPipeline(object):
-	# Extra optimized
-	# From https://cloud.google.com/tpu/docs/inception-v3-advanced
 
-	def __init__(self, is_training, path):
-		self.path = path
-		self.is_training = is_training
-
-	def __call__(self, params):
-		# Storage
-		dataset = tf.data.Dataset.list_files(self.path)
-		if self.is_training and params['initial_shuffle_buffer_size'] > 0:
-			dataset = dataset.shuffle(buffer_size=params['initial_shuffle_buffer_size'])
-		if self.is_training:
-			dataset = dataset.repeat()
-
-		def prefetch_dataset(filename):
-			dataset = tf.data.TFRecordDataset(filename, buffer_size=params['prefetch_dataset_buffer_size'])
-			return dataset
-
-		dataset = dataset.apply(
-				tf.contrib.data.parallel_interleave(
-						prefetch_dataset,
-						cycle_length=params['num_files_infeed'],
-						sloppy=True))
-		if params['followup_shuffle_buffer_size'] > 0:
-			dataset = dataset.shuffle(
-				buffer_size=params['followup_shuffle_buffer_size'])
-
-		# Preprocessing
-		dataset = dataset.map(
-				lambda record: parse_tfrecord(params, record),
-				num_parallel_calls=params['num_parallel_calls'])
-
-		dataset = dataset.prefetch(batch_size)
-		dataset = dataset.apply(
-				tf.contrib.data.batch_and_drop_remainder(batch_size))
-		dataset = dataset.prefetch(2)	# Prefetch overlaps in-feed with training
-		images, labels = dataset.make_one_shot_iterator().get_next()
-
-		# Transfer
-		return images, labels
-
-
-def generic_input_fn(params, path, repeat=False):
-
-	matching_files = tf.gfile.Glob(path)
-
-	dataset = tf.data.TFRecordDataset(matching_files)
-	dataset = dataset.map(lambda record: parse_tfrecord(params, record))
-	dataset = dataset.shuffle(params['batch_size']*20)
-
-	if repeat:
-		dataset = dataset.repeat()
-
-	dataset = dataset.batch(params['batch_size'], drop_remainder=True)
-
-	return dataset
+# --------------------------------------------------------------------------
+# Input functions for each training mode
+# --------------------------------------------------------------------------
 
 def train_input_fn(params):
-	return generic_input_fn(params, params['train_input_path'], repeat=True)
+	return factory_input_fn(params, is_training=True)
 
 def eval_input_fn(params):
-	return generic_input_fn(params, params['eval_input_path'], repeat=True)
+	return factory_input_fn(params, is_training=False)
 
 def predict_input_fn(params):
 	count = max(params['num_samples'], params['batch_size'], params['inception_score_sample_size'])
@@ -98,6 +45,50 @@ def predict_input_fn(params):
 	dataset = dataset.batch(params['batch_size'], drop_remainder=True)
 	return dataset
 
+
+
+# --------------------------------------------------------------------------
+# Train/eval data sources
+# --------------------------------------------------------------------------
+
+def tfr_input_fn(params, is_training):
+
+	path = params['train_input_path'] if is_training else params['eval_input_path']
+
+	matching_files = tf.gfile.Glob(path)
+
+	dataset = tf.data.TFRecordDataset(matching_files)
+	dataset = dataset.map(lambda record: parse_tfrecord(params, record))
+	dataset = dataset.shuffle(params['batch_size']*20)
+	dataset = dataset.repeat()
+
+	dataset = dataset.batch(params['batch_size'], drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE)
+	return dataset
+
+def mnist_input_fn(params, is_training=True):
+	dataset = tfds.load(name="mnist", split=tfds.Split.TRAIN if is_training else tfds.Split.TEST)
+	dataset = dataset.shuffle(1024).batch(params['batch_size']).prefetch(tf.data.experimental.AUTOTUNE)
+
+	def map_fn(features):
+		image = tf.cast(features["image"], tf.float32) / 127.5 - 1
+		label = tf.one_hot(features["label"], params['num_labels'], dtype=tf.float32)
+		return image, label
+
+	dataset = dataset.map(map_fn)
+	return dataset
+
+def factory_input_fn(params, is_training):
+	if params['data_source'] == 'tfr':
+		return tfr_input_fn(params, is_training)
+	elif params['data_source'] == 'mnist':
+		return mnist_input_fn(params, is_training)
+
+
+
+
+# --------------------------------------------------------------------------
+# Parse tf records
+# --------------------------------------------------------------------------
 
 def parse_tfrecord(params, record):
 	if params["tfr_format"] == 'progan':

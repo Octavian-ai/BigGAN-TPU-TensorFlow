@@ -7,7 +7,7 @@ from tensorflow.contrib.opt import MovingAverageOptimizer
 import logging
 logger = logging.getLogger(__name__)
 
-class BigGAN_128(object):
+class BigGAN(object):
 
 	def __init__(self, args):
 		pass
@@ -58,8 +58,21 @@ class BigGAN_128(object):
 			x = batch_norm(x, is_training)
 			x = relu(x)
 			x = conv(x, channels=params['img_ch'], kernel=3, stride=1, pad=1, use_bias=False, sn=sn, scope='G_logit')
-
 			x = tanh(x)
+
+			# Crop down to expected size if spare pixels
+			if x.shape[1] > params['img_size']:
+				logger.warning(f"Cropping off {x.shape[1] - params['img_size']} pixels from width of generated images")
+				x = x[:,:params['img_size'],:,:]
+			
+			if x.shape[2] > params['img_size']:
+				logger.warning(f"Cropping off {x.shape[2] - params['img_size']} pixels from height of generated images")
+				x = x[:,:,:params['img_size'],:]
+			
+
+			assert x.shape[1] == params['img_size'], "Generator architecture does not fit image size"
+			assert x.shape[2] == params['img_size'], "Generator architecture does not fit image size"
+			assert x.shape[3] == params['img_ch'],   "Generator architecture does not fit image channels"
 
 			logger.debug("--")
 
