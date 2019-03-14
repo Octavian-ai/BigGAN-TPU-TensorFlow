@@ -134,15 +134,19 @@ def model_dir(args):
 
 def setup_logging(args):
 
+	# Remove existing handlers at the root
+	logging.getLogger().handlers = []
+
 	# Set to DEBUG to see a trace of the model layers being created
-	coloredlogs.install(level='INFO', logger=logging.getLogger('ops'))
-	coloredlogs.install(level='INFO', logger=logging.getLogger('BigGAN'))
+	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('ops'))
+	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('BigGAN'))
+	
+	coloredlogs.install(level=args.verbosity, logger=logger)
+	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('main_tpu'))
+	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('utils'))
 
-	coloredlogs.install(level='INFO', logger=logger)
-	coloredlogs.install(level='INFO', logger=logging.getLogger('main_tpu'))
-	coloredlogs.install(level='INFO', logger=logging.getLogger('utils'))
-
-	tf.logging.set_verbosity(args.verbosity)
+	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('tensorflow'))
+	
 
 	# log = logging.getLogger()
 	# log_path = os.path.join(suffixed_folder(args, args.result_dir), 'log.txt')

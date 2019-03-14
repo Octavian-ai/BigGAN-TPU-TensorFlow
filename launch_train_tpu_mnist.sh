@@ -13,7 +13,7 @@ nohup pipenv run python main_tpu.py \
 	--train-steps 1875 \
 	--eval-steps 40 \
 	--batch-size 32 \
-	--ch 16 \
+	--ch 96 \
 	--layers 3 \
 	--epoch 10000 \
 	--tag mnist \
