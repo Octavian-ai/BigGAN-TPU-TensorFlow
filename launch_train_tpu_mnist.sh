@@ -16,7 +16,7 @@ nohup pipenv run python main_tpu.py \
 	--ch 96 \
 	--layers 3 \
 	--self-attn-res 16 \
-	--epoch 10000 \
+	--epoch 20 \
 	--tag mnist \
 	--tag run-$RANDOM \
 	--disable-inception-score \

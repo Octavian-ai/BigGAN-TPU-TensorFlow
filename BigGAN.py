@@ -44,7 +44,12 @@ class BigGAN(object):
 
 			for i in range(params['layers']):
 				x_size = x.shape[-2]
-				cond = tf.concat([z_split[i], labels], axis=-1)
+
+				if params['use_label_cond']:
+					cond = tf.concat([z_split[i], labels], axis=-1)
+				else:
+					cond = z_split[i]
+					
 				x = resblock_up_condition(x, cond, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
 				
 				x_size = x.shape[-2]
