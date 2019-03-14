@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pipenv run python main_tpu.py \
+nohup pipenv run python main_tpu.py \
 	--use-tpu \
 	--model-dir gs://octavian-training2/gan/mnist/model \
 	--result-dir ./results \
@@ -18,4 +18,4 @@ pipenv run python main_tpu.py \
 	--tag mnist \
 	--tag run-$RANDOM \
 	--disable-inception-score \
-	$@
+	$@ &
