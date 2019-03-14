@@ -28,9 +28,10 @@ def parse_args():
 	parser.add_argument('--tag'              , action="append" , default=[])
 	parser.add_argument('--phase'            , type=str        , default='train'                                           , help='train or test ?')
 	
+	parser.add_argument('--data-source'      , type=str        , default="tfr", choices=['tfr', 'mnist'], help="Where to get data from - tfrecords or mnist (internally downloaded)")
 	parser.add_argument('--train-input-path' , type=str        , default='./datasets/imagenet/train*')
 	parser.add_argument('--eval-input-path'  , type=str        , default='./datasets/imagenet/validate*')
-	parser.add_argument('--tfr-format'       , type=str        , default='inception', choices=['inception', 'progan'])
+	parser.add_argument('--tfr-format'       , type=str        , default='inception', choices=['inception', 'progan'], help="What format the tf records use. ProGAN is from Nvidia's github, inception is from the tensorflow/models/research github")
 	parser.add_argument('--num-labels'       , type=int        , default=1000, help="Number of different possible labels")
 
 	parser.add_argument('--model-dir'        , type=str        , default='model')
@@ -39,13 +40,13 @@ def parse_args():
 	# SAGAN
 	# batch_size = 256
 	# base channel = 64
-	# epoch = 100 (1M iterations)
+	# epoch =  (1M iterations)
 	# self-attn-res = [64]
 
 	parser.add_argument('--img-size'        , type=int             , default=128                               , help='The width and height of the input/output image')
 	parser.add_argument('--img-ch'          , type=int             , default=3                                 , help='The number of channels in the input/output image')
 
-	parser.add_argument('--epochs'          , type=int             , default=100                               , help='The number of training iterations')
+	parser.add_argument('--epochs'          , type=int             , default=1000000                           , help='The number of training iterations')
 	parser.add_argument('--train-steps'     , type=int             , default=10000                             , help='The number of training iterations')
 	parser.add_argument('--eval-steps'      , type=int             , default=100                               , help='The number of eval iterations')
 	parser.add_argument('--batch-size'      , type=int             , default=2048  , dest="_batch_size"        , help='The size of batch across all GPUs')
@@ -59,7 +60,7 @@ def parse_args():
 	parser.add_argument('--tpu-name'        , action='append'      , default=[] )
 	parser.add_argument('--tpu-zone'		, type=str, default='us-central1-f')
 	parser.add_argument('--num-shards'      , type=int             , default=8) # A single TPU has 8 shards
-	parser.add_argument('--steps-per-loop'  , type=int             , default=10000)
+	parser.add_argument('--steps-per-loop'  , type=int             , default=1000)
 
 	parser.add_argument('--disable-comet'   , action='store_false', dest='use_comet')
 
@@ -83,7 +84,7 @@ def parse_args():
 	parser.add_argument('--z-dim'          , type=int      , default=128           , help='Dimension of noise vector')
 	parser.add_argument('--sn'             , type=str2bool , default=True          , help='using spectral norm')
 
-	parser.add_argument('--gan-type'       , type=str      , default='hinge'       , help='[gan / lsgan / wgan-gp / wgan-lp / dragan / hinge]')
+	parser.add_argument('--gan-type'       , type=str      , default='hinge'       , choices=['gan', 'lsgan', 'wgan-gp', 'wgan-lp', 'dragan', 'hinge'])
 	parser.add_argument('--ld'             , type=float    , default=10.0          , help='The gradient penalty lambda')
 	parser.add_argument('--n-critic'       , type=int      , default=2             , help='The number of critic')
 

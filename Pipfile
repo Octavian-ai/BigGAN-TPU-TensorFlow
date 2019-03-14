@@ -13,13 +13,13 @@ name = "pypi"
 
 tensorflow = "==1.12"
 scipy = "*"
-keras = "*"
 imageio = "*"
 google-api-python-client = "*"
 "oauth2client" = "*"
 coloredlogs = "*"
 cloud-tpu-profiler = "==1.12"
 comet-ml = "*"
+tensorflow-hub = "*"
 
 
 [requires]

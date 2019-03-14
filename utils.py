@@ -22,51 +22,6 @@ class EasyDict(dict):
 
 
 # --------------------------------------------------------------------------
-# Input data
-# --------------------------------------------------------------------------
-
-class ImageData:
-
-    def __init__(self, load_size, channels, custom_dataset):
-        self.load_size = load_size
-        self.channels = channels
-        self.custom_dataset = custom_dataset
-
-    def image_processing(self, filename):
-
-        if not self.custom_dataset :
-            x_decode = filename
-        else :
-            x = tf.read_file(filename)
-            x_decode = tf.image.decode_jpeg(x, channels=self.channels)
-
-        img = tf.image.resize_images(x_decode, [self.load_size, self.load_size])
-        img = tf.cast(img, tf.float32) / 127.5 - 1
-
-        return img
-
-
-def load_mnist():
-    from keras.datasets import mnist
-    (train_data, train_labels), (test_data, test_labels) = mnist.load_data()
-    x = np.concatenate((train_data, test_data), axis=0)
-    x = np.expand_dims(x, axis=-1)
-
-    return x
-
-def load_cifar10():
-    from keras.datasets import cifar10
-    (train_data, train_labels), (test_data, test_labels) = cifar10.load_data()
-    x = np.concatenate((train_data, test_data), axis=0)
-
-    return x
-
-
-def normalize(x) :
-    return x/127.5 - 1
-
-
-# --------------------------------------------------------------------------
 # Logging
 # --------------------------------------------------------------------------
 
@@ -131,7 +86,11 @@ def save_predictions(args, result_dir, eval_file, predictions, epoch, total_step
         imageio.imwrite(tmp_file_path, grid_image)
         experiment.log_image(tmp_file_path)
 
-    inception_score = calculate_inception_score(samples)
+    def sample_gen():
+        for i in samples:
+            yield i
+
+    inception_score = calculate_inception_score(sample_gen, batched=False)
     inception_score_dict = {'inception_score': inception_score}
 
     logger.info(f"step {total_steps}\t{inception_score_dict}")
@@ -140,7 +99,7 @@ def save_predictions(args, result_dir, eval_file, predictions, epoch, total_step
         experiment.log_metric('inception_score', inception_score)
 
     
-    eval_file.write(f"Step {total_steps}\t inception_score={inception_score}\n")
+    eval_file.write(f"Step {total_steps}\t inception_score={inception_score} inception_score_sample_size={len(samples)}\n")
 
 
 

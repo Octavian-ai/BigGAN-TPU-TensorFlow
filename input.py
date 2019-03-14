@@ -103,7 +103,11 @@ def parse_tfrecord(params, record):
 	if params["tfr_format"] == 'progan':
 		return parse_tfrecord_progan(params, record)
 	elif params["tfr_format"] == 'inception':
-		return parse_tfrecord_inception(params, record, is_training=False, use_summary=False)
+		return parse_tfrecord_inception(
+			params, record, 
+			width=params['img_size'],
+			height=params['img_size'],
+			is_training=False, use_summary=False)
 	else:
 		raise NotImplementedError("Unrecognised --tfr_format")
 
@@ -136,7 +140,7 @@ def parse_tfrecord_progan(params, record):
 	return img, empty_label
 
 
-def parse_tfrecord_inception(params, record, is_training, use_summary):
+def parse_tfrecord_inception(params, record, width, height, is_training=True, use_summary=False):
 	'''
 	Parse the records saved using the tensorflow official inception data build
 
@@ -146,7 +150,7 @@ def parse_tfrecord_inception(params, record, is_training, use_summary):
 
 	image_buffer, label, bbox, label_text = parse_example_proto(record)
 
-	image = image_preprocessing(image_buffer, bbox, is_training, params['img_size'], use_summary=use_summary)
+	image = image_preprocessing(image_buffer, bbox, is_training, width, height, use_summary=use_summary)
 	# [batch, height, width, channels] range(-1.0,1.0)
 
 	label_one_hot = tf.one_hot(tf.squeeze(label, axis=-1), params['num_labels'], dtype=image.dtype)

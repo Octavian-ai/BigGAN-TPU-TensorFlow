@@ -10,6 +10,11 @@ of generating image summaries, for debug purposes.
 """
 
 import tensorflow as tf
+import tensorflow_hub as hub
+
+import numpy as np
+import imageio
+
 import time
 
 from args import *
@@ -19,24 +24,33 @@ from inception_score import calculate_inception_score
 def input_fn(params):
 	matching_files = tf.gfile.Glob(params['train_input_path'])
 	dataset = tf.data.TFRecordDataset(matching_files)
-	dataset = dataset.shuffle(100)
+	dataset = dataset.shuffle(params['batch_size'] * 10)
+	dataset = dataset.take(params["inception_score_sample_size"])
+	dataset = dataset.batch(params["batch_size"], drop_remainder=True)
 	return dataset
 
 
 def model_fn(features, labels, mode, params):
+
+	module = hub.Module("https://tfhub.dev/google/imagenet/inception_v3/classification/1")
+	height, width = hub.get_expected_image_size(module)
 	
 	# Done here to get the summaries in the model_fn execution
-	image, labels = parse_tfrecord_inception(params, features, is_training=False, use_summary=True)
+	images = tf.map_fn(
+		lambda i: parse_tfrecord_inception(params, i, width, height, is_training=False, use_summary=True)[0],
+		features,
+		dtype=tf.float32
+		)
 
-	tf.summary.image("final_image", tf.expand_dims(image, axis=0))
+	tf.summary.image("final_image", images)
+	
+	logits = module(images) # [batch_size, height, width, 3] => [batch_size, num_classes]
 
 	# Does nothing useful, just to run tensors through the graph
-	loss = tf.reduce_mean(tf.layers.dense(image, 1))
+	loss = tf.reduce_mean(tf.layers.dense(images, 1))
 	train_op = tf.train.AdamOptimizer().minimize(loss, tf.train.get_global_step())	
 
-	predictions = {
-		"image": image
-	}
+	predictions =  logits
 
 	return tf.estimator.EstimatorSpec(
 		loss=loss, 
@@ -52,26 +66,49 @@ def test_dataset():
 
 	params = vars(args)
 	params["verbosity"] = "INFO"
+	params['inception_score_sample_size'] = 50000
+	params["batch_size"] = 128
 
-	estimator = tf.estimator.Estimator(
-		model_fn=model_fn, 
-		params=params,
-		model_dir="./model/test_dataset/"+str(time.time()))
+	try:
+		raise Exception("Force build")
+		logits = np.loadtxt("./temp/inception_logits.txt.gz")
+	except:
+		estimator = tf.estimator.Estimator(
+			model_fn=model_fn, 
+			params=params,
+			model_dir="./model/test_dataset/"+str(time.time()))
 
-	estimator.train(input_fn=input_fn, steps=100)
+		estimator.train(input_fn=input_fn, steps=3)
 
-	predictions = estimator.predict(input_fn=input_fn)
+		predictions = estimator.predict(input_fn=input_fn)
 
-	sample_images = []
-	for i in predictions:
-		sample_images.append(i["image"])
-		if len(sample_images) >= args.inception_score_sample_size
+		logits = []
+		for i in predictions:
+			logits.append(i)
 
-	score = calculate_inception_score(sample_images)
-	print(f"Inception score {score} using {len(sample_images)} samples")
+		logits = np.array(logits)
+		np.savetxt("./temp/inception_logits.txt.gz", logits)
 
 
-	
+	print(f"Logits shape {logits.shape}")
+	imageio.imwrite("./temp/inception_logits.png", logits)
+	marginal_logits = np.sum(logits, axis=0, keepdims=True)
+	marginal_logits = np.tile(marginal_logits, [500, 1])
+	imageio.imwrite("./temp/inception_marginal_logits.png", marginal_logits)
+
+
+
+	with tf.Graph().as_default():
+		with tf.Session() as sess:
+			v_logits = tf.placeholder(tf.float32, logits.shape)	
+			v_score = tf.contrib.gan.eval.classifier_score_from_logits(v_logits)
+
+			score = sess.run(v_score, feed_dict={v_logits:logits})
+			score = float(score)
+
+	# score = calculate_inception_score(lambda: (i for i in sample_images), batched=False)
+	print(f"Inception score {score} using {len(logits)} samples")
+
 
 
 if __name__ == "__main__":
