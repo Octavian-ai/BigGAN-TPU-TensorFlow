@@ -49,8 +49,8 @@ class BigGAN(object):
 					cond = tf.concat([z_split[i], labels], axis=-1)
 				else:
 					cond = z_split[i]
-					
-				x = resblock_up_condition(x, cond, channels=ch, use_bias=False, is_training=is_training, sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
+
+				x = resblock_up_condition(x, cond, channels=ch, use_bias=False, is_training=is_training, cross_device=params['use_tpu'], sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
 				
 				x_size = x.shape[-2]
 				if x_size in params['self_attn_res']:
@@ -60,7 +60,7 @@ class BigGAN(object):
 
 			ch = ch * 2
 
-			x = batch_norm(x, is_training)
+			x = batch_norm(x, is_training, cross_device=params['use_tpu'])
 			x = relu(x)
 			x = conv(x, channels=params['img_ch'], kernel=3, stride=1, pad=1, use_bias=False, sn=sn, scope='G_logit')
 			x = tanh(x)

@@ -162,16 +162,16 @@ def resblock(x_init, channels, use_bias=True, is_training=True, sn=False, scope=
 
         return x + x_init
 
-def resblock_up(x_init, channels, use_bias=True, is_training=True, sn=False, scope='resblock_up'):
+def resblock_up(x_init, channels, use_bias=True, is_training=True, cross_device=False, sn=False, scope='resblock_up'):
     logger.debug(f"resblock_up {scope}")
     with tf.variable_scope(scope):
         with tf.variable_scope('res1'):
-            x = batch_norm(x_init, is_training)
+            x = batch_norm(x_init, is_training, cross_device=cross_device)
             x = relu(x)
             x = deconv(x, channels, kernel=3, stride=2, use_bias=use_bias, sn=sn)
 
         with tf.variable_scope('res2') :
-            x = batch_norm(x, is_training)
+            x = batch_norm(x, is_training, cross_device=cross_device)
             x = relu(x)
             x = deconv(x, channels, kernel=3, stride=1, use_bias=use_bias, sn=sn)
 
@@ -181,16 +181,16 @@ def resblock_up(x_init, channels, use_bias=True, is_training=True, sn=False, sco
 
     return x + x_init
 
-def resblock_up_condition(x_init, cond, channels, use_bias=True, is_training=True, sn=False, scope='resblock_up'):
+def resblock_up_condition(x_init, cond, channels, use_bias=True, is_training=True, cross_device=False, sn=False, scope='resblock_up'):
     logger.debug(f"resblock_up_condition {scope}")
     with tf.variable_scope(scope):
         with tf.variable_scope('res1'):
-            x = condition_batch_norm(x_init, cond, is_training)
+            x = condition_batch_norm(x_init, cond, is_training, cross_device=cross_device)
             x = relu(x)
             x = deconv(x, channels, kernel=3, stride=2, use_bias=use_bias, sn=sn)
 
         with tf.variable_scope('res2') :
-            x = condition_batch_norm(x, cond, is_training)
+            x = condition_batch_norm(x, cond, is_training, cross_device=cross_device)
             x = relu(x)
             x = deconv(x, channels, kernel=3, stride=1, use_bias=use_bias, sn=sn)
 
@@ -232,6 +232,8 @@ def self_attention(x, channels, sn=False, scope='self_attention'):
 
         beta = tf.nn.softmax(s)  # attention map
 
+        # TODO: check that softmax along the last dimension was the correct one
+
         o = tf.matmul(beta, hw_flatten(h))  # [bs, N, C]
         gamma = tf.get_variable("gamma", [1], initializer=tf.constant_initializer(0.0))
 
@@ -255,6 +257,8 @@ def self_attention_2(x, channels, sn=False, scope='self_attention'):
         s = tf.matmul(hw_flatten(g), hw_flatten(f), transpose_b=True)  # # [bs, N, N]
 
         beta = tf.nn.softmax(s)  # attention map
+
+        # TODO: check that softmax along the last dimension was the correct one
 
         o = tf.matmul(beta, hw_flatten(h))  # [bs, N, C]
         gamma = tf.get_variable("gamma", [1], initializer=tf.constant_initializer(0.0))
@@ -307,15 +311,18 @@ def tanh(x):
 # Normalization function
 ##################################################################################
 
-def batch_norm(x, is_training=True, scope='batch_norm'):
+def batch_norm(x, is_training=True, cross_device=False, scope='batch_norm'):
     # TODO: replace with tf.nn.batch_normalization(x, batch_mean, batch_var, beta, gamma, epsilon)
-    return tf.layers.batch_normalization(x,
-                                         momentum=0.9,
-                                         epsilon=1e-05,
-                                         training=is_training,
-                                         name=scope)
+    # return tf.layers.batch_normalization(x,
+    #                                      momentum=0.9,
+    #                                      epsilon=1e-05,
+    #                                      training=is_training,
+    #                                      name=scope)
 
-def condition_batch_norm(x, z, is_training=True, scope='batch_norm'):
+    static_z = tf.zeros([x.get_shape()[0],1])
+    return condition_batch_norm(x, static_z, is_training, cross_device, scope)
+
+def condition_batch_norm(x, z, is_training=True, cross_device=False, scope='batch_norm'):
     with tf.variable_scope(scope) :
         _, _, _, c = x.get_shape().as_list()
         decay = 0.9
@@ -331,8 +338,16 @@ def condition_batch_norm(x, z, is_training=True, scope='batch_norm'):
         gamma = tf.reshape(gamma, shape=[-1, 1, 1, c])
 
         if is_training:
+
+            if cross_device:
+                # Notice this little bit of magic: this is how BatchNorm is computed
+                # across the whole batch, not just the shard on this TPU core
+                multi_device_x = tf.contrib.tpu.cross_replica_sum(x)
+            else:
+                multi_device_x = x
+
             # Update exponential moving averages of the batch mean and var
-            batch_mean, batch_var = tf.nn.moments(x, [0, 1, 2])
+            batch_mean, batch_var = tf.nn.moments(multi_device_x, [0, 1, 2])
             ema_mean = tf.assign(test_mean, test_mean * decay + batch_mean * (1 - decay))
             ema_var  = tf.assign(test_var,  test_var  * decay + batch_var  * (1 - decay))
 
