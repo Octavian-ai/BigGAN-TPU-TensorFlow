@@ -63,6 +63,8 @@ def parse_args():
 	parser.add_argument('--steps-per-loop'  , type=int             , default=1000)
 
 	parser.add_argument('--disable-comet'   , action='store_false', dest='use_comet')
+	parser.add_argument('--disable-inception-score'   , action='store_false', dest='use_inception_score')
+
 
 	parser.add_argument('--self-attn-res'   , action='append', default=[] )
 

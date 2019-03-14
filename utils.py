@@ -90,16 +90,17 @@ def save_predictions(args, result_dir, eval_file, predictions, epoch, total_step
         for i in samples:
             yield i
 
-    inception_score = calculate_inception_score(sample_gen, batched=False, channels=args.img_ch)
-    inception_score_dict = {'inception_score': inception_score}
+    if args.use_inception_score:
+        inception_score = calculate_inception_score(sample_gen, batched=False, channels=args.img_ch)
+        inception_score_dict = {'inception_score': inception_score}
 
-    logger.info(f"step {total_steps}\t{inception_score_dict}")
+        logger.info(f"step {total_steps}\t{inception_score_dict}")
 
-    if args.use_comet:
-        experiment.log_metric('inception_score', inception_score)
+        if args.use_comet:
+            experiment.log_metric('inception_score', inception_score)
 
-    
-    eval_file.write(f"Step {total_steps}\t inception_score={inception_score} inception_score_sample_size={len(samples)}\n")
+        
+        eval_file.write(f"Step {total_steps}\t inception_score={inception_score} inception_score_sample_size={len(samples)}\n")
 
 
 

@@ -5,13 +5,14 @@ pipenv run python main_tpu.py \
 	--img-size 28 \
 	--img-ch 1 \
 	--num-labels 10 \
-	--steps-per-loop 1 \
-	--train-steps 1 \
-	--eval-steps 1 \
+	--steps-per-loop 500 \
+	--train-steps 1875 \
+	--eval-steps 40 \
 	--batch-size 32 \
-	--ch 8 \
+	--ch 16 \
 	--layers 3 \
-	--epoch 3 \
+	--epoch 10000 \
 	--tag mnist \
 	--tag run-$RANDOM \
+	--disable-inception-score \
 	$@

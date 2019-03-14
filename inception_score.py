@@ -40,7 +40,7 @@ def calculate_inception_score(image_generator, batched=True, batch_size=None, im
 			v_image_batch = iterator.get_next()
 
 			if channels == 1 and v_image_batch.shape[-1] == 1:
-				v_image_batch = tf.squeeze(v_image_batch)
+				v_image_batch = tf.tile(v_image_batch, [1,1,1,3])
 
 			v_images = tf.contrib.gan.eval.preprocess_image(v_image_batch)
 			v_image_logits = tf.contrib.gan.eval.run_inception(v_images)
