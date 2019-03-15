@@ -1,6 +1,8 @@
 import tensorflow as tf
 from utils import orthogonal_regularizer_fully, orthogonal_regularizer
 
+import tpu_normalization
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -313,11 +315,19 @@ def tanh(x):
 
 def batch_norm(x, is_training=True, cross_device=False, scope='batch_norm'):
     # TODO: replace with tf.nn.batch_normalization(x, batch_mean, batch_var, beta, gamma, epsilon)
-    return tf.layers.batch_normalization(x,
-                                         momentum=0.9,
-                                         epsilon=1e-05,
-                                         training=is_training,
-                                         name=scope)
+
+    if cross_device:
+        return tpu_normalization.cross_replica_batch_normalization(x,
+                                                                     momentum=0.9,
+                                                                     epsilon=1e-05,
+                                                                     training=is_training,
+                                                                     name=scope)
+    else:
+        return tf.layers.batch_normalization(x,
+                                             momentum=0.9,
+                                             epsilon=1e-05,
+                                             training=is_training,
+                                             name=scope)
 
     # static_z = tf.zeros([x.get_shape()[0],1])
     # return condition_batch_norm(x, static_z, is_training, cross_device, scope)
