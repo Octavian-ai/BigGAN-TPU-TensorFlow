@@ -1,4 +1,5 @@
 
+from main_loop import run_main_loop
 
 import tensorflow as tf
 
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 from utils import *
 from args  import *
-from main_loop import run_main_loop
+
 
 
 def main():
