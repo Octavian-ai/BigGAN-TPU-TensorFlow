@@ -1,10 +1,7 @@
 
-
-from comet_ml import Experiment
 import tensorflow as tf
 
 from BigGAN import BigGAN
-from inception_score import prefetch_inception_model
 
 import argparse
 import subprocess
@@ -15,8 +12,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 from utils import *
-from input import *
 from args  import *
+from main_loop import run_main_loop
 
 
 def main():
@@ -44,7 +41,7 @@ def main():
 											args.num_shards),
 	)
 
-	tpu_estimator = tf.contrib.tpu.TPUEstimator(
+	estimator = tf.contrib.tpu.TPUEstimator(
 		model_fn=lambda features, labels, mode, params: gan.tpu_model_fn(features, labels, mode, params),
 		config = tpu_run_config,
 		use_tpu=args.use_tpu,
@@ -54,44 +51,7 @@ def main():
 		params=vars(args),
 	)
 
-	total_steps = 0
-
-	if args.use_comet:
-		experiment = Experiment(api_key=comet_ml_api_key, project_name=comet_ml_project, workspace=comet_ml_workspace)
-		experiment.log_parameters(vars(args))
-		experiment.add_tags(args.tag)
-		experiment.set_name(model_name(args))
-	else:
-		experiment = None
-
-	prefetch_inception_model()
-
-	train_steps = math.ceil(args.train_examples / args._batch_size)
-	eval_steps  = math.ceil(args.eval_examples  / args._batch_size)
-
-	with tf.gfile.Open(os.path.join(suffixed_folder(args, args.result_dir), "eval.txt"), "a") as eval_file:
-		for epoch in range(args.epochs):
-
-			logger.info(f"Training epoch {epoch}")
-			tpu_estimator.train(input_fn=train_input_fn, steps=train_steps)
-			total_steps += train_steps
-			
-			logger.info(f"Evaluate {epoch}")
-			evaluation = tpu_estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
-			logger.info(evaluation)
-			save_evaluation(args, eval_file, evaluation, epoch, total_steps)
-			
-			if args.use_comet:
-				experiment.set_step(total_steps)
-				experiment.log_metrics(evaluation)
-			
-			logger.info(f"Generate predictions {epoch}")
-			predictions = tpu_estimator.predict(input_fn=predict_input_fn)
-			
-			logger.info(f"Save predictions")
-			save_predictions(args, suffixed_folder(args, args.result_dir), eval_file, predictions, epoch, total_steps, experiment)
-
-	logger.info(f"Completed {args.epochs} epochs")
+	run_main_loop(args, estimator)
 
 
 if __name__ == '__main__':

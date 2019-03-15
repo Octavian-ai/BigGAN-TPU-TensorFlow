@@ -65,10 +65,10 @@ def tfr_input_fn(params, is_training):
 	dataset = dataset.batch(params['batch_size'], drop_remainder=True).prefetch(tf.data.experimental.AUTOTUNE)
 	return dataset
 
-def mnist_input_fn(params, is_training=True):
+def tfds_input_fn(params, dataset, is_training=True):
 
 	dataset = tfds.load(
-		name="mnist", 
+		name=dataset, 
 		split=tfds.Split.TRAIN if is_training else tfds.Split.TEST,
 		data_dir=params['data_dir'])
 
@@ -88,8 +88,8 @@ def mnist_input_fn(params, is_training=True):
 def factory_input_fn(params, is_training):
 	if params['data_source'] == 'tfr':
 		return tfr_input_fn(params, is_training)
-	elif params['data_source'] == 'mnist':
-		return mnist_input_fn(params, is_training)
+	elif params['data_source'] in ['mnist', 'cifar10', 'cifar100']:
+		return tfds_input_fn(params, params['data_source'], is_training)
 
 
 

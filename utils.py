@@ -4,7 +4,8 @@ import os
 import itertools
 from glob import glob
 import imageio
-
+import math
+import os.path
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
@@ -22,7 +23,7 @@ class EasyDict(dict):
 
 
 # --------------------------------------------------------------------------
-# Logging
+# Main loop helpers
 # --------------------------------------------------------------------------
 
 def str2bool(x):

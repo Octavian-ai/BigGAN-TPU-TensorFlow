@@ -136,25 +136,10 @@ def setup_logging(args):
 	# Remove existing handlers at the root
 	logging.getLogger().handlers = []
 
-	# Set to DEBUG to see a trace of the model layers being created
-	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('ops'))
-	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('BigGAN'))
-
 	coloredlogs.install(level=args.verbosity, logger=logger)
-	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('main_tpu'))
-	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('utils'))
 
-	coloredlogs.install(level=args.verbosity, logger=logging.getLogger('tensorflow'))
-	
-
-	# log = logging.getLogger()
-	# log_path = os.path.join(suffixed_folder(args, args.result_dir), 'log.txt')
-	# stream = tf.gfile.Open(log_path, 'a')
-	# fh = logging.StreamHandler(stream=stream)
-	# fh.setLevel(logging.INFO)
-	# formatter = logging.Formatter('%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s')
-	# fh.setFormatter(formatter)
-	# log.addHandler(fh)
+	for i in ['main_tpu', 'main_gpu', 'main_loop', 'utils', 'input', 'tensorflow', 'ops', 'BigGAN']:
+		coloredlogs.install(level=args.verbosity, logger=logging.getLogger(i))
 
 	logger.info(f"cmd args: {vars(args)}")
 

@@ -153,6 +153,19 @@ class BigGAN(object):
 	##################################################################################
 
 	def base_model_fn(self, features, labels, mode, params):
+		'''
+		
+		All the model function heavy lifting is done here, agnostic of whether
+		it'll be used in an Estimator or TPUEstimator
+
+		'''
+
+		params = EasyDict(**params)
+
+		# --------------------------------------------------------------------------
+		# Core GAN model
+		# --------------------------------------------------------------------------
+		
 
 		# Because we cannot pass in labels in predict mode (despite them being useful 
 		# for GANs), I've passed the labels in as the (otherwise unneeded) features
@@ -186,80 +199,33 @@ class BigGAN(object):
 		else:
 			d_loss = 0
 
-		# Get all the vars
+
+		# --------------------------------------------------------------------------
+		# Vars for training and evaluation
+		# --------------------------------------------------------------------------
+		
 		t_vars = tf.trainable_variables()
 		d_vars = [var for var in t_vars if 'discriminator' in var.name]
 		g_vars = [var for var in t_vars if 'generator' in var.name]
 
-		return d_loss, d_vars, g_loss, g_vars, fake_images, fake_logits, z
-
-
-	def tpu_model_fn(self, features, labels, mode, params):
-
-		params = EasyDict(**params)
-
-		d_loss, d_vars, g_loss, g_vars, fake_images, fake_logits, z = self.base_model_fn(features, labels, mode, params)
 
 		# --------------------------------------------------------------------------
-		# Predict
+		# Loss
 		# --------------------------------------------------------------------------
 
-		if mode == tf.estimator.ModeKeys.PREDICT:
-		    predictions = {
-				"z": z,
-				"fake_image": fake_images,
-				"fake_logits": fake_logits,
-		    }
-		    return tf.contrib.tpu.TPUEstimatorSpec(mode, predictions=predictions)
+		if mode != tf.estimator.ModeKeys.PREDICT:
+			loss = g_loss
+			for i in range(params.n_critic):
+				loss += d_loss
+		else:
+			loss = 0
 
 
 		# --------------------------------------------------------------------------
-		# Train or Eval
+		# Training op
 		# --------------------------------------------------------------------------
-	
-		loss = g_loss
-		for i in range(params.n_critic):
-			loss += d_loss
 
-		
-		if mode == tf.estimator.ModeKeys.EVAL:
-
-			# Hack to allow it out of a fixed batch size TPU
-			d_loss_batched = tf.tile(tf.expand_dims(d_loss, 0), [params.batch_size])
-			g_loss_batched = tf.tile(tf.expand_dims(g_loss, 0), [params.batch_size])
-
-			d_grad = tf.gradients(d_loss, d_vars)
-			g_grad = tf.gradients(g_loss, g_vars)
-
-			d_grad_joined = tf.concat([
-				tf.reshape(i, [-1]) for i in d_grad
-			], axis=-1)
-
-			g_grad_joined = tf.concat([
-				tf.reshape(i, [-1]) for i in g_grad
-			], axis=-1)
-
-			def tpu_metric_fn(d_loss, g_loss, fake_logits, d_grad, g_grad):
-				return {
-					"d_loss"      : tf.metrics.mean(d_loss),
-					"g_loss"      : tf.metrics.mean(g_loss),
-					"fake_logits" : tf.metrics.mean(fake_logits),
-					"d_grad"      : tf.metrics.mean(d_grad),
-					"g_grad"      : tf.metrics.mean(g_grad),
-				}
-
-			return tf.contrib.tpu.TPUEstimatorSpec(
-				mode=mode,
-				loss=loss, 
-				eval_metrics=(
-					tpu_metric_fn, 
-					[d_loss_batched, g_loss_batched, fake_logits, d_grad_joined, g_grad_joined]
-				)
-			)
-
-		
 		if mode == tf.estimator.ModeKeys.TRAIN:
-
 			# Create training ops for both D and G
 
 			d_optimizer = tf.train.AdamOptimizer(params.d_lr, beta1=params.beta1, beta2=params.beta2)
@@ -286,6 +252,97 @@ class BigGAN(object):
 				train_ops.append(d_train_op)
 			train_op = tf.group(*train_ops)
 
+		else:
+			train_op = None
+
+		# --------------------------------------------------------------------------
+		# Predictions
+		# --------------------------------------------------------------------------
+
+		predictions = {
+			"z": z,
+			"fake_image": fake_images,
+			"fake_logits": fake_logits,
+		}
+
+		# --------------------------------------------------------------------------
+		# Eval metrics
+		# --------------------------------------------------------------------------
+		
+		if mode == tf.estimator.ModeKeys.EVAL:
+
+			# Hack to allow it out of a fixed batch size TPU
+			d_loss_batched = tf.tile(tf.expand_dims(d_loss, 0), [params.batch_size])
+			g_loss_batched = tf.tile(tf.expand_dims(g_loss, 0), [params.batch_size])
+
+			d_grad = tf.gradients(d_loss, d_vars)
+			g_grad = tf.gradients(g_loss, g_vars)
+
+			d_grad_joined = tf.concat([
+				tf.reshape(i, [-1]) for i in d_grad
+			], axis=-1)
+
+			g_grad_joined = tf.concat([
+				tf.reshape(i, [-1]) for i in g_grad
+			], axis=-1)
+
+			def metric_fn(d_loss, g_loss, fake_logits, d_grad, g_grad):
+				return {
+					"d_loss"      : tf.metrics.mean(d_loss),
+					"g_loss"      : tf.metrics.mean(g_loss),
+					"fake_logits" : tf.metrics.mean(fake_logits),
+					"d_grad"      : tf.metrics.mean(d_grad),
+					"g_grad"      : tf.metrics.mean(g_grad),
+				}
+
+			metric_fn_args = [d_loss_batched, g_loss_batched, fake_logits, d_grad_joined, g_grad_joined]
+
+		else:
+			metric_fn = None
+			metric_fn_args = None
+
+		# --------------------------------------------------------------------------
+		# Alright, all built!
+		# --------------------------------------------------------------------------
+
+		return loss, train_op, predictions, metric_fn, metric_fn_args
+
+	def gpu_model_fn(self, features, labels, mode, params):
+
+		loss, train_op, predictions, metric_fn, metric_fn_args = self.base_model_fn(features, labels, mode, params)
+
+		if mode == tf.estimator.ModeKeys.PREDICT:
+			return tf.estimator.EstimatorSpec(mode, predictions=predictions)
+
+		if mode == tf.estimator.ModeKeys.EVAL:
+			return tf.estimator.EstimatorSpec(
+				mode=mode,
+				loss=loss, 
+				eval_metric_ops=metric_fn(*metric_fn_args)
+			)
+
+		if mode == tf.estimator.ModeKeys.TRAIN:
+			return tf.estimator.EstimatorSpec(mode, loss=loss, train_op=train_op)
+
+
+	def tpu_model_fn(self, features, labels, mode, params):
+
+		loss, train_op, predictions, metric_fn, metric_fn_args = self.base_model_fn(features, labels, mode, params)
+
+		if mode == tf.estimator.ModeKeys.PREDICT:
+		    return tf.contrib.tpu.TPUEstimatorSpec(mode, predictions=predictions)
+	
+		if mode == tf.estimator.ModeKeys.EVAL:
+			return tf.contrib.tpu.TPUEstimatorSpec(
+				mode=mode,
+				loss=loss, 
+				eval_metrics=(
+					metric_fn, 
+					metric_fn_args
+				)
+			)
+
+		if mode == tf.estimator.ModeKeys.TRAIN:
 			return tf.contrib.tpu.TPUEstimatorSpec(mode, loss=loss, train_op=train_op)
 
 
