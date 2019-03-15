@@ -19,8 +19,8 @@ class BigGAN(object):
 
 	def generator(self, params, z, labels, is_training=True, reuse=False):
 		logger.debug("generator")
-		cross_device = False # params['use_tpu']
-		
+		cross_device = params['use_tpu']
+
 		with tf.variable_scope("generator", reuse=reuse):
 			# 6
 			if params['z_dim'] == 128:
