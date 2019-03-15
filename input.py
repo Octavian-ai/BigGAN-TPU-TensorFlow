@@ -79,7 +79,12 @@ def tfds_input_fn(params, dataset, is_training=True):
 
 	def map_fn(features):
 		image = tf.cast(features["image"], tf.float32) / 127.5 - 1
-		label = tf.one_hot(features["label"], params['num_labels'], dtype=tf.float32)
+
+		if "label" in features:
+			label = tf.one_hot(features["label"], params['num_labels'], dtype=tf.float32)
+		else:
+			label = tf.zeros([params['batch_size'], 1])
+
 		return image, label
 
 	dataset = dataset.map(map_fn)
@@ -88,7 +93,7 @@ def tfds_input_fn(params, dataset, is_training=True):
 def factory_input_fn(params, is_training):
 	if params['data_source'] == 'tfr':
 		return tfr_input_fn(params, is_training)
-	elif params['data_source'] in ['mnist', 'cifar10', 'cifar100']:
+	elif params['data_source'] in ['mnist', 'cifar10', 'cifar100', 'lsun']:
 		return tfds_input_fn(params, params['data_source'], is_training)
 
 

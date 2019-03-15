@@ -11,7 +11,7 @@ nohup pipenv run python main_tpu.py \
 	--img-ch 3 \
 	--num-labels 10 \
 	--steps-per-loop 500 \
-	--train-examples 60000 \
+	--train-examples 50000 \
 	--eval-examples 10000 \
 	--layers 3 \
 	--epoch 20 \

@@ -28,7 +28,7 @@ def parse_args():
 	parser.add_argument('--tag'              , action="append" , default=[])
 	parser.add_argument('--phase'            , type=str        , default='train'                                           , help='train or test ?')
 	
-	parser.add_argument('--data-source'      , type=str        , default="tfr", choices=['tfr', 'mnist'], help="Where to get data from - tfrecords or mnist (internally downloaded)")
+	parser.add_argument('--data-source'      , type=str        , default="tfr", choices=['tfr', 'mnist', 'cifar10', 'cifar100', 'lsun'], help="Where to get data from - tfrecords or mnist (internally downloaded)")
 	parser.add_argument('--train-input-path' , type=str        , default='./datasets/imagenet/train*')
 	parser.add_argument('--eval-input-path'  , type=str        , default='./datasets/imagenet/validate*')
 	parser.add_argument('--tfr-format'       , type=str        , default='inception', choices=['inception', 'progan'], help="What format the tf records use. ProGAN is from Nvidia's github, inception is from the tensorflow/models/research github")
