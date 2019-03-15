@@ -91,7 +91,7 @@ def main():
 			logger.info(f"Save predictions")
 			save_predictions(args, suffixed_folder(args, args.result_dir), eval_file, predictions, epoch, total_steps, experiment)
 
-
+	logger.info(f"Completed {args.epochs} epochs")
 
 
 if __name__ == '__main__':

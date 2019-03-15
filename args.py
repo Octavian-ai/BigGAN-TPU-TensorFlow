@@ -51,10 +51,9 @@ def parse_args():
 	parser.add_argument('--epochs'          , type=int             , default=1000000                           , help='The number of training iterations')
 	parser.add_argument('--train-examples'  , type=int             , default=1281167                           , help='The number of training examples in the dataset (used to calculate steps per epoch). Default to ImageNet values')
 	parser.add_argument('--eval-examples'   , type=int             , default=50000                             , help='The number of eval examples in the dataset (used to calculate steps per epoch). Default to ImageNet values')
-	parser.add_argument('--batch-size'      , type=int             , default=2048  , dest="_batch_size"        , help='The size of batch across all GPUs')
-
 	parser.add_argument('--shuffle-buffer'  , type=int             , default=4000 )
 	
+	parser.add_argument('--batch-size'      , type=int             , default=2048  , dest="_batch_size"        , help='The size of batch across all GPUs')
 	parser.add_argument('--ch'              , type=int             , default=96                                , help='base channel number per layer')
 	parser.add_argument('--layers'          , type=int             , default=5 )
 
