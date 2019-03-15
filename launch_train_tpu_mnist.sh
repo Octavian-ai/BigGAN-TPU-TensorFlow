@@ -13,7 +13,7 @@ nohup pipenv run python main_tpu.py \
 	--train-examples 60000 \
 	--eval-examples 10000 \
 	--batch-size 64 \
-	--ch 96 \
+	--ch 16 \
 	--layers 3 \
 	--self-attn-res 16 \
 	--epoch 20 \

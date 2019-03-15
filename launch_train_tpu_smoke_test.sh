@@ -7,10 +7,10 @@ nohup pipenv run python3.6 main_tpu.py --use-tpu \
 	--result-dir ./results \
 	--batch-size 32  \
 	--verbosity INFO \
-	--steps-per-loop 200 \
-	--train-examples 1281 \
-	--eval-examples 50 \
-	--epochs 5 \
+	--steps-per-loop 1 \
+	--train-examples 32 \
+	--eval-examples 32 \
+	--epochs 1 \
 	--tag run-$RANDOM \
 	--disable-comet \
 	$@ &
