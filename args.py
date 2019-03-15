@@ -68,7 +68,6 @@ def parse_args():
 	parser.add_argument('--disable-inception-score'   , action='store_false', dest='use_inception_score')
 	parser.add_argument('--disable-label-cond'   , action='store_false', dest='use_label_cond')
 
-
 	parser.add_argument('--self-attn-res'   , action='append', default=[] )
 
 	parser.add_argument('--g-lr'            , type=float           , default=0.00005                           , help='learning rate for generator')

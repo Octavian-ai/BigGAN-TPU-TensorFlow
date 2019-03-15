@@ -19,6 +19,7 @@ class BigGAN(object):
 
 	def generator(self, params, z, labels, is_training=True, reuse=False):
 		logger.debug("generator")
+		cross_device = False # params['use_tpu']
 		with tf.variable_scope("generator", reuse=reuse):
 			# 6
 			if params['z_dim'] == 128:
@@ -50,7 +51,7 @@ class BigGAN(object):
 				else:
 					cond = z_split[i]
 
-				x = resblock_up_condition(x, cond, channels=ch, use_bias=False, is_training=is_training, cross_device=params['use_tpu'], sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
+				x = resblock_up_condition(x, cond, channels=ch, use_bias=False, is_training=is_training, cross_device=cross_device, sn=sn, scope=f"resblock_up_w{x_size}_ch{ch//params['ch']}")
 				
 				x_size = x.shape[-2]
 				if x_size in params['self_attn_res']:
@@ -60,7 +61,7 @@ class BigGAN(object):
 
 			ch = ch * 2
 
-			x = batch_norm(x, is_training, cross_device=params['use_tpu'])
+			x = batch_norm(x, is_training, cross_device=cross_device)
 			x = relu(x)
 			x = conv(x, channels=params['img_ch'], kernel=3, stride=1, pad=1, use_bias=False, sn=sn, scope='G_logit')
 			x = tanh(x)
