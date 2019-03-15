@@ -313,14 +313,14 @@ def tanh(x):
 
 def batch_norm(x, is_training=True, cross_device=False, scope='batch_norm'):
     # TODO: replace with tf.nn.batch_normalization(x, batch_mean, batch_var, beta, gamma, epsilon)
-    # return tf.layers.batch_normalization(x,
-    #                                      momentum=0.9,
-    #                                      epsilon=1e-05,
-    #                                      training=is_training,
-    #                                      name=scope)
+    return tf.layers.batch_normalization(x,
+                                         momentum=0.9,
+                                         epsilon=1e-05,
+                                         training=is_training,
+                                         name=scope)
 
-    static_z = tf.zeros([x.get_shape()[0],1])
-    return condition_batch_norm(x, static_z, is_training, cross_device, scope)
+    # static_z = tf.zeros([x.get_shape()[0],1])
+    # return condition_batch_norm(x, static_z, is_training, cross_device, scope)
 
 def condition_batch_norm(x, z, is_training=True, cross_device=False, scope='batch_norm'):
     with tf.variable_scope(scope) :
