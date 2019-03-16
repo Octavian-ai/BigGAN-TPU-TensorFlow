@@ -9,9 +9,9 @@ pipenv run python main_tpu.py \
 	--train-examples 60000 \
 	--eval-examples 10000 \
 	--batch-size 32 \
-	--ch 16 \
+	--ch 8 \
 	--layers 3 \
-	--epoch 10000 \
+	--epoch 1000 \
 	--tag mnist \
 	--tag run-$RANDOM \
 	--disable-inception-score \

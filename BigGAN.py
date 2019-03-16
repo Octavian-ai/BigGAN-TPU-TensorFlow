@@ -263,6 +263,7 @@ class BigGAN(object):
 			"z": z,
 			"fake_image": fake_images,
 			"fake_logits": fake_logits,
+			"labels": labels
 		}
 
 		# --------------------------------------------------------------------------

@@ -50,48 +50,72 @@ def model_name(args):
 def suffixed_folder(args, dir):
     return os.path.join(dir, *args.tag, model_name(args))
 
+def imwrite(file, data):
+    d = data * 255
+    d = d.astype(np.uint8)
+    imageio.imwrite(file, d, format="png")
+
+
 def save_predictions(args, result_dir, eval_file, predictions, epoch, total_steps, experiment):
 
     image_frame_dim = int(np.floor(np.sqrt(args.num_samples)))
     samples = []
+    labels = []
 
     try:
         for ct, i in enumerate(predictions):
             if ct >= args.num_samples:
                 break
             samples.append(i['fake_image'])
+            labels.append(i['labels'])
     
     except tf.errors.OutOfRangeError:
         pass
 
+
     if len(samples) == 0:
-        tf.logging.warning(f"No predictions returned from TensorFlow in epoch {epoch}")
+        logger.warning(f"No predictions returned from TensorFlow in epoch {epoch}")
         return
 
     else:
-        logger.info(f"Saving grid of {len(samples)} predictions")
+        logger.info(f"Generated {len(samples)} samples")
 
     samples = np.array(samples)
     grid_samples = samples[:image_frame_dim * image_frame_dim, :, :, :]
     grid_image = merge(inverse_transform(grid_samples), [image_frame_dim, image_frame_dim])
-    grid_image *= 255
-    grid_image = grid_image.astype(np.uint8)
-
+  
     for filename in ['epoch%02d' % epoch + '_sample.png', 'latest_sample.png']:
         file_path = os.path.join(result_dir, filename)
         with tf.gfile.Open(file_path, 'wb') as file:
-            imageio.imwrite(file, grid_image, format="png")
+            imwrite(file, grid_image)
+
+    labelled_samples = zip(samples,labels)
+
+    for ct, (sample, label) in  enumerate(itertools.islice(labelled_samples, args.num_labels)):
+        filename = 'epoch%02d' % epoch +  f"_sample_{ct}_label_{label}.png"
+        file_path = os.path.join(result_dir, filename)
+        with tf.gfile.Open(file_path, 'wb') as file:
+            imwrite(file, sample)
+
+        if args.use_comet:
+            tmp_file_path = f"./temp/latest_label_{label}.png"
+            imwrite(tmp_file_path, sample)
+            experiment.log_image(tmp_file_path)
+
 
     if args.use_comet:
         tmp_file_path = "./temp/latest_sample.png"
-        imageio.imwrite(tmp_file_path, grid_image)
+        imwrite(tmp_file_path, grid_image)
         experiment.log_image(tmp_file_path)
 
-    def sample_gen():
-        for i in samples:
-            yield i
+    
 
     if args.use_inception_score:
+
+        def sample_gen():
+            for i in samples:
+                yield i
+
         inception_score = calculate_inception_score(sample_gen, batched=False, channels=args.img_ch)
         inception_score_dict = {'inception_score': inception_score}
 
@@ -99,7 +123,6 @@ def save_predictions(args, result_dir, eval_file, predictions, epoch, total_step
 
         if args.use_comet:
             experiment.log_metric('inception_score', inception_score)
-
         
         eval_file.write(f"Step {total_steps}\t inception_score={inception_score} inception_score_sample_size={len(samples)}\n")
 

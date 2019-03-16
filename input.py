@@ -33,14 +33,17 @@ def eval_input_fn(params):
 	return factory_input_fn(params, is_training=False)
 
 def predict_input_fn(params):
-	count = max(params['num_samples'], params['batch_size'], params['inception_score_sample_size'])
+	count = max(params['num_samples'], params['batch_size'])
+	if params['use_inception_score']:
+		count = max(count, params['inception_score_sample_size'])
 	
 	# Which labels to generate
 	label_data = np.eye(params['num_labels'], dtype=np.float32)
-	label_data = np.repeat(label_data, 1 + (count // params['num_labels']), axis=0)
-	np.random.shuffle(label_data)
+	label_data = np.tile(label_data, [1 + (count // params['num_labels']), 1])
+	# np.random.shuffle(label_data) # provide the labels in order
 	label_data = label_data[:count]
-
+	np.set_printoptions(threshold=np.inf)
+	
 	dataset = tf.data.Dataset.from_tensor_slices(label_data)
 	dataset = dataset.batch(params['batch_size'], drop_remainder=True)
 	return dataset
@@ -111,7 +114,7 @@ def parse_tfrecord(params, record):
 			params, record, 
 			width=params['img_size'],
 			height=params['img_size'],
-			is_training=False, use_summary=False)
+			is_training=False, use_summary=params['use_summary'])
 	else:
 		raise NotImplementedError("Unrecognised --tfr_format")
 

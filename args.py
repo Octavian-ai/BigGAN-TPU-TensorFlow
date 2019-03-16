@@ -67,6 +67,8 @@ def parse_args():
 	parser.add_argument('--disable-inception-score'   , action='store_false', dest='use_inception_score')
 	parser.add_argument('--disable-label-cond'   , action='store_false', dest='use_label_cond')
 
+	parser.add_argument('--enable-summary', action='store_true', dest='use_summary')
+
 	parser.add_argument('--self-attn-res'   , action='append', default=[] )
 
 	parser.add_argument('--g-lr'            , type=float           , default=0.00005                           , help='learning rate for generator')
@@ -103,8 +105,6 @@ def parse_args():
 
 
 def check_args(args):
-	tf.gfile.MakeDirs(suffixed_folder(args, args.result_dir))
-	tf.gfile.MakeDirs("./temp/")
 
 	assert args.epochs >= 1, "number of epochs must be larger than or equal to one"
 	assert args._batch_size >= 1, "batch size must be larger than or equal to one"
@@ -121,6 +121,9 @@ def check_args(args):
 	if args.use_comet:
 		assert comet_ml_api_key is not None,   "Please provide your comet API key as $COMET_ML_API_KEY or specify --disable-comet. Comet is a cloud ML experiment visualisation platform."
 		assert comet_ml_workspace is not None, "Please provide your comet API key as $COMET_ML_WORKSPACE or specify --disable-comet. Comet is a cloud ML experiment visualisation platform."
+
+	tf.gfile.MakeDirs(suffixed_folder(args, args.result_dir))
+	tf.gfile.MakeDirs("./temp/")
 
 	return args
 

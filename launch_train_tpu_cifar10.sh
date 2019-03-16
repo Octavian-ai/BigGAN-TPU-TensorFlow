@@ -14,7 +14,7 @@ nohup pipenv run python main_tpu.py \
 	--train-examples 50000 \
 	--eval-examples 10000 \
 	--layers 3 \
-	--epoch 20 \
+	--epoch 200 \
 	--tag cifar10 \
 	--tag run-$RANDOM \
 	--disable-inception-score \
