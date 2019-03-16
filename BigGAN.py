@@ -90,7 +90,7 @@ class BigGAN(object):
 	# Discriminator
 	##################################################################################
 
-	def discriminator(self, params, x, is_training=True, reuse=False):
+	def discriminator(self, params, x, label, is_training=True, reuse=False):
 		logger.debug("discriminator")
 		with tf.variable_scope("discriminator", reuse=reuse):
 			ch = params['ch']
@@ -115,11 +115,16 @@ class BigGAN(object):
 
 			x = global_sum_pooling(x)
 
-			x = fully_connected(x, units=1, sn=sn, scope='D_logit')
+			label_embed = fully_connected(label, units=x.shape[-1], sn=sn, scope='D_label_embed')
+			label_proj = x * label_embed
+
+			x_scalar = fully_connected(x, units=1, sn=sn, scope='D_scalar')
+
+			output = x_scalar + tf.reduce_sum(label_proj, axis=-1)
 
 			logger.debug("--")
 
-			return x
+			return output
 
 	def gradient_penalty(self, real, fake):
 		if self.gan_type.__contains__('dragan'):
@@ -182,12 +187,12 @@ class BigGAN(object):
 
 		# generate and critique fake images
 		fake_images = self.generator(params, z, labels_expanded)
-		fake_logits = self.discriminator(params, fake_images)
+		fake_logits = self.discriminator(params, fake_images, labels)
 		g_loss = generator_loss(params.gan_type, fake=fake_logits)
 
 		# Train the discriminator
 		if mode in [tf.estimator.ModeKeys.TRAIN, tf.estimator.ModeKeys.EVAL]:
-			real_logits = self.discriminator(params, features, reuse=True)
+			real_logits = self.discriminator(params, features, labels, reuse=True)
 
 			if params.gan_type.__contains__('wgan') or params.gan_type == 'dragan':
 				GP = self.gradient_penalty(real=features, fake=fake_images)

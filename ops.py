@@ -352,7 +352,7 @@ def condition_batch_norm(x, z, is_training=True, cross_device=False, scope='batc
             if cross_device:
                 # Notice this little bit of magic: this is how BatchNorm is computed
                 # across the whole batch, not just the shard on this TPU core
-                multi_device_x = tf.contrib.tpu.cross_replica_sum(x)
+                multi_device_x = tpu_normalization.cross_replica_average(x)
             else:
                 multi_device_x = x
 
