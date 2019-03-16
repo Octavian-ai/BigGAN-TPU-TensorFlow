@@ -179,14 +179,10 @@ class BigGAN(object):
 			labels = features
 		
 		# Latent input to generate images
-		z = tf.truncated_normal(shape=[params.batch_size, 1, 1, params.z_dim], name='random_z')
+		z = tf.truncated_normal(shape=[params.batch_size, params.z_dim], name='random_z')
 		
-		# Conditioning of the batch normalization based on image label
-		labels_expanded = tf.expand_dims(labels, 1)
-		labels_expanded = tf.expand_dims(labels_expanded, 1)
-
 		# generate and critique fake images
-		fake_images = self.generator(params, z, labels_expanded)
+		fake_images = self.generator(params, z, labels)
 		fake_logits = self.discriminator(params, fake_images, labels)
 		g_loss = generator_loss(params.gan_type, fake=fake_logits)
 
