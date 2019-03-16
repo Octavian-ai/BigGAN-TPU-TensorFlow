@@ -61,7 +61,7 @@ def parse_args():
 	parser.add_argument('--tpu-name'        , action='append'      , default=[] )
 	parser.add_argument('--tpu-zone'		, type=str, default='us-central1-f')
 	parser.add_argument('--num-shards'      , type=int             , default=8) # A single TPU has 8 shards
-	parser.add_argument('--steps-per-loop'  , type=int             , default=1000)
+	parser.add_argument('--steps-per-loop'  , type=int             , default=100)
 
 	parser.add_argument('--disable-comet'   , action='store_false', dest='use_comet')
 	parser.add_argument('--disable-inception-score'   , action='store_false', dest='use_inception_score')

@@ -45,7 +45,7 @@ def run_main_loop(args, estimator):
 			save_evaluation(args, eval_file, evaluation, epoch, total_steps)
 			
 			if args.use_comet:
-				experiment.set_step(total_steps)
+				experiment.set_step(epoch)
 				experiment.log_metrics(evaluation)
 			
 			logger.info(f"Generate predictions {epoch}")

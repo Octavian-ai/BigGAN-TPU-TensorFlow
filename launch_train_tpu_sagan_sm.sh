@@ -6,7 +6,6 @@ nohup pipenv run python3.6 main_tpu.py --use-tpu \
 	--model-dir gs://octavian-training2/gan/imagenet/model \
 	--result-dir ./results \
 	--batch-size 256  \
-	--steps-per-loop 100 \
 	--ch 64 \
 	--layers 3 \
 	--img-size 32 \

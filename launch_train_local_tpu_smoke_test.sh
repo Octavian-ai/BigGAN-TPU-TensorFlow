@@ -1,9 +1,9 @@
 #!/bin/bash
 
 pipenv run python main_tpu.py \
-	--data-source mnist \
-	--img-size 28 \
-	--img-ch 1 \
+	--data-source cifar10 \
+	--img-size 32 \
+	--img-ch 3 \
 	--num-labels 10 \
 	--steps-per-loop 1 \
 	--train-examples 32 \

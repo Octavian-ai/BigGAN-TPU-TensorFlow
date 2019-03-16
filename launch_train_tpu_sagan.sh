@@ -1,12 +1,12 @@
 #!/bin/bash
 
 nohup pipenv run python3.6 main_tpu.py --use-tpu \
+	--tpu-name $TPU_NAME \
 	--train-input-path gs://octavian-static/download/imagenet/tfr-full/train* \
 	--eval-input-path gs://octavian-static/download/imagenet/tfr-full/validation* \
 	--model-dir gs://octavian-training2/gan/imagenet/model \
 	--result-dir ./results \
 	--batch-size 256  \
-	--steps-per-loop 100 \
 	--ch 64 \
 	--self-attn-res 64 \
 	--g-lr 0.0001 \

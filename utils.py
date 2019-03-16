@@ -51,8 +51,11 @@ def suffixed_folder(args, dir):
     return os.path.join(dir, *args.tag, model_name(args))
 
 def imwrite(file, data):
-    d = data * 255
+
+    # Normalised [0,255] as integer
+    d = 255 * (data - np.min(data)) / np.ptp(data)
     d = d.astype(np.uint8)
+
     imageio.imwrite(file, d, format="png")
 
 
@@ -92,19 +95,22 @@ def save_predictions(args, result_dir, eval_file, predictions, epoch, total_step
     labelled_samples = zip(samples,labels)
 
     for ct, (sample, label) in  enumerate(itertools.islice(labelled_samples, args.num_labels)):
-        filename = 'epoch%02d' % epoch +  f"_sample_{ct}_label_{label}.png"
+
+        label_int = np.argmax(label)
+
+        filename = f"epoch{epoch:02d}_label{label_int:02d}.png"
         file_path = os.path.join(result_dir, filename)
         with tf.gfile.Open(file_path, 'wb') as file:
             imwrite(file, sample)
 
         if args.use_comet:
-            tmp_file_path = f"./temp/latest_label_{label}.png"
+            tmp_file_path = f"./temp/label{label_int:02d}.png"
             imwrite(tmp_file_path, sample)
             experiment.log_image(tmp_file_path)
 
 
     if args.use_comet:
-        tmp_file_path = "./temp/latest_sample.png"
+        tmp_file_path = "./temp/sample.png"
         imwrite(tmp_file_path, grid_image)
         experiment.log_image(tmp_file_path)
 
