@@ -15,6 +15,7 @@ nohup pipenv run python main_tpu.py \
 	--batch-size 64 \
 	--ch 96 \
 	--epoch 200000 \
+	--predict-every 5 \
 	--tag cifar10 \
 	--tag run-$RANDOM \
 	--steps-per-loop 500 \

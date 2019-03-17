@@ -38,21 +38,25 @@ def run_main_loop(args, train_estimator, predict_estimator):
 			logger.info(f"Training epoch {epoch}")
 			train_estimator.train(input_fn=train_input_fn, steps=train_steps)
 			total_steps += train_steps
-			
-			# logger.info(f"Evaluate {epoch}")
-			# evaluation = predict_estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
-			# logger.info(evaluation)
-			# save_evaluation(args, eval_file, evaluation, epoch, total_steps)
-			
+
 			if args.use_comet:
 				experiment.set_step(epoch)
-				# experiment.log_metrics(evaluation)
-			
-			logger.info(f"Generate predictions {epoch}")
-			predictions = predict_estimator.predict(input_fn=predict_input_fn)
-			
-			logger.info(f"Save predictions")
-			save_predictions(args, suffixed_folder(args, args.result_dir), eval_file, predictions, epoch, total_steps, experiment)
+
+			if epoch % args.predict_every == 0:
+				
+				# logger.info(f"Evaluate {epoch}")
+				# evaluation = predict_estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
+				# logger.info(evaluation)
+				# save_evaluation(args, eval_file, evaluation, epoch, total_steps)
+				
+				# if args.use_comet:
+				# 	experiment.log_metrics(evaluation)
+				
+				logger.info(f"Generate predictions {epoch}")
+				predictions = predict_estimator.predict(input_fn=predict_input_fn)
+				
+				logger.info(f"Save predictions")
+				save_predictions(args, suffixed_folder(args, args.result_dir), eval_file, predictions, epoch, total_steps, experiment)
 
 	logger.info(f"Completed {args.epochs} epochs")
 
