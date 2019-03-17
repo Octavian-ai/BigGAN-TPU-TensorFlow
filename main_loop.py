@@ -33,30 +33,28 @@ def run_main_loop(args, train_estimator, predict_estimator):
 	prefetch_inception_model()
 
 	with tf.gfile.Open(os.path.join(suffixed_folder(args, args.result_dir), "eval.txt"), "a") as eval_file:
-		for epoch in range(args.epochs):
+		for epoch in range(0, args.epochs, args.predict_every):
 
 			logger.info(f"Training epoch {epoch}")
-			train_estimator.train(input_fn=train_input_fn, steps=train_steps)
-			total_steps += train_steps
+			train_estimator.train(input_fn=train_input_fn, steps=train_steps * args.predict_every)
+			total_steps += train_steps * args.predict_every
 
 			if args.use_comet:
 				experiment.set_step(epoch)
 
-			if epoch % args.predict_every == 0:
-				
-				# logger.info(f"Evaluate {epoch}")
-				# evaluation = predict_estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
-				# logger.info(evaluation)
-				# save_evaluation(args, eval_file, evaluation, epoch, total_steps)
-				
-				# if args.use_comet:
-				# 	experiment.log_metrics(evaluation)
-				
-				logger.info(f"Generate predictions {epoch}")
-				predictions = predict_estimator.predict(input_fn=predict_input_fn)
-				
-				logger.info(f"Save predictions")
-				save_predictions(args, suffixed_folder(args, args.result_dir), eval_file, predictions, epoch, total_steps, experiment)
+			# logger.info(f"Evaluate {epoch}")
+			# evaluation = predict_estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
+			# logger.info(evaluation)
+			# save_evaluation(args, eval_file, evaluation, epoch, total_steps)
+			
+			# if args.use_comet:
+			# 	experiment.log_metrics(evaluation)
+			
+			logger.info(f"Generate predictions {epoch}")
+			predictions = predict_estimator.predict(input_fn=predict_input_fn)
+			
+			logger.info(f"Save predictions")
+			save_predictions(args, suffixed_folder(args, args.result_dir), eval_file, predictions, epoch, total_steps, experiment)
 
 	logger.info(f"Completed {args.epochs} epochs")
 
