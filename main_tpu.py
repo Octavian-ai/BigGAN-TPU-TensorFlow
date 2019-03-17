@@ -27,9 +27,8 @@ def main():
 		cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
 			tpu=args.tpu_name,
 			zone=args.tpu_zone)
-		master = cluster_resolver.get_master()
 	else:
-		master = ''
+		cluster_resolver = None
 
 	tpu_run_config = tf.contrib.tpu.RunConfig(
 		cluster=cluster_resolver,
