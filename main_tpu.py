@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 from utils import *
 from args  import *
 
-def get_estimator(args, gan, force_local=False):
+def get_estimator(args, gan, force_local=False, predict_batch_size=16, eval_batch_size=16):
 
 	use_tpu = args.use_tpu and not force_local
 
@@ -41,11 +41,11 @@ def get_estimator(args, gan, force_local=False):
 		config=tpu_run_config,
 		use_tpu=use_tpu,
 		train_batch_size=args._batch_size,
-		eval_batch_size=args._batch_size,
-		predict_batch_size=args._batch_size,
+		eval_batch_size=predict_batch_size,
+		predict_batch_size=eval_batch_size,
 		params=vars(args),
 	)
-	
+
 	return estimator
 
 def main():
