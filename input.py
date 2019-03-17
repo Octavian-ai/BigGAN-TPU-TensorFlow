@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 import tensorflow_datasets as tfds
 
+import math
 import os.path
 import glob
 
@@ -33,9 +34,13 @@ def eval_input_fn(params):
 	return factory_input_fn(params, is_training=False)
 
 def predict_input_fn(params):
-	count = max(params['num_samples'], params['batch_size'])
+	count = params['num_labels'] * params['num_labels']
+
 	if params['use_inception_score']:
 		count = max(count, params['inception_score_sample_size'])
+
+	# Since we drop_remainder, we need to round up to nearest batch size
+	count = math.ceil(count / params['batch_size']) * params['batch_size']
 	
 	# Which labels to generate
 	label_data = np.eye(params['num_labels'], dtype=np.float32)

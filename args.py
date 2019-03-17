@@ -94,8 +94,8 @@ def parse_args():
 	parser.add_argument('--n-critic'       , type=int      , default=2             , help='The number of critic')
 
 	# IGoodfellow says sould be 50k
-	parser.add_argument('--inception-score-sample-size'     , type=int      , default=512            , help='The number of sample images to use in inception score')
-	parser.add_argument('--num-samples'     , type=int      , default=36            , help='The number of sample images to save')
+	parser.add_argument('--inception-score-sample-size'     , type=int      , default=50000            , help='The number of sample images to use in inception score')
+	# parser.add_argument('--num-samples'     , type=int      , default=36            , help='The number of sample images to save')
 	
 	parser.add_argument('--verbosity', type=str, default='INFO')
 

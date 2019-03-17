@@ -61,13 +61,13 @@ def imwrite(file, data):
 
 def save_predictions(args, result_dir, eval_file, predictions, epoch, total_steps, experiment):
 
-    image_frame_dim = int(np.floor(np.sqrt(args.num_samples)))
+    image_frame_dim = args.num_labels
     samples = []
     labels = []
 
     try:
         for ct, i in enumerate(predictions):
-            if ct >= args.num_samples:
+            if ct >= image_frame_dim * image_frame_dim:
                 break
             samples.append(i['fake_image'])
             labels.append(i['labels'])
