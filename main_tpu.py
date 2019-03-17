@@ -16,14 +16,11 @@ logger = logging.getLogger(__name__)
 from utils import *
 from args  import *
 
+def get_estimator(args, gan, force_local=False):
 
-def main():
-	args = parse_args()
-	setup_logging(args)
+	use_tpu = args.use_tpu and not force_local
 
-	gan = BigGAN(args)
-
-	if args.use_tpu:
+	if use_tpu:
 		cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
 			tpu=args.tpu_name,
 			zone=args.tpu_zone)
@@ -41,15 +38,24 @@ def main():
 
 	estimator = tf.contrib.tpu.TPUEstimator(
 		model_fn=lambda features, labels, mode, params: gan.tpu_model_fn(features, labels, mode, params),
-		config = tpu_run_config,
-		use_tpu=args.use_tpu,
+		config=tpu_run_config,
+		use_tpu=use_tpu,
 		train_batch_size=args._batch_size,
 		eval_batch_size=args._batch_size,
 		predict_batch_size=args._batch_size,
 		params=vars(args),
 	)
+	
+	return estimator
 
-	run_main_loop(args, estimator)
+def main():
+	args = parse_args()
+	setup_logging(args)
+	gan = BigGAN(args)
+
+	run_main_loop(args, 
+		get_estimator(args, gan), 
+		get_estimator(args, gan, True))
 
 
 if __name__ == '__main__':

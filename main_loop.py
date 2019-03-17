@@ -17,7 +17,7 @@ from utils import *
 from args import *
 
 
-def run_main_loop(args, estimator):
+def run_main_loop(args, train_estimator, predict_estimator):
 	total_steps = 0
 	train_steps = math.ceil(args.train_examples / args._batch_size)
 	eval_steps  = math.ceil(args.eval_examples  / args._batch_size)
@@ -36,20 +36,20 @@ def run_main_loop(args, estimator):
 		for epoch in range(args.epochs):
 
 			logger.info(f"Training epoch {epoch}")
-			estimator.train(input_fn=train_input_fn, steps=train_steps)
+			train_estimator.train(input_fn=train_input_fn, steps=train_steps)
 			total_steps += train_steps
 			
-			logger.info(f"Evaluate {epoch}")
-			evaluation = estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
-			logger.info(evaluation)
-			save_evaluation(args, eval_file, evaluation, epoch, total_steps)
+			# logger.info(f"Evaluate {epoch}")
+			# evaluation = predict_estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
+			# logger.info(evaluation)
+			# save_evaluation(args, eval_file, evaluation, epoch, total_steps)
 			
 			if args.use_comet:
 				experiment.set_step(epoch)
-				experiment.log_metrics(evaluation)
+				# experiment.log_metrics(evaluation)
 			
 			logger.info(f"Generate predictions {epoch}")
-			predictions = estimator.predict(input_fn=predict_input_fn)
+			predictions = predict_estimator.predict(input_fn=predict_input_fn)
 			
 			logger.info(f"Save predictions")
 			save_predictions(args, suffixed_folder(args, args.result_dir), eval_file, predictions, epoch, total_steps, experiment)

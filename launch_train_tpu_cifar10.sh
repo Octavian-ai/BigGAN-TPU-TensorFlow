@@ -12,7 +12,7 @@ nohup pipenv run python main_tpu.py \
 	--img-ch 3 \
 	--num-labels 10 \
 	--layers 3 \
-	--batch-size 128 \
+	--batch-size 64 \
 	--ch 96 \
 	--epoch 200000 \
 	--tag cifar10 \

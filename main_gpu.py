@@ -34,7 +34,7 @@ def main():
 		model_dir=model_dir(args)
 	)
 
-	run_main_loop(args, estimator)
+	run_main_loop(args, estimator, estimator)
 
 
 if __name__ == '__main__':
