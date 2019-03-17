@@ -32,8 +32,7 @@ def main():
 		master = ''
 
 	tpu_run_config = tf.contrib.tpu.RunConfig(
-		master=master,
-		evaluation_master=master,
+		cluster=cluster_resolver,
 		model_dir=model_dir(args),
 		session_config=tf.ConfigProto(
 			allow_soft_placement=True, 
