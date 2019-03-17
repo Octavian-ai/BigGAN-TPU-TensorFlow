@@ -38,8 +38,7 @@ def main():
 		session_config=tf.ConfigProto(
 			allow_soft_placement=True, 
 			log_device_placement=False),
-		tpu_config=tf.contrib.tpu.TPUConfig(args.steps_per_loop,
-											args.num_shards),
+		tpu_config=tf.contrib.tpu.TPUConfig(args.steps_per_loop),
 	)
 
 	estimator = tf.contrib.tpu.TPUEstimator(

@@ -58,9 +58,8 @@ def parse_args():
 	parser.add_argument('--layers'          , type=int             , default=5 )
 
 	parser.add_argument('--use-tpu'         , action='store_true')
-	parser.add_argument('--tpu-name'        , action='append'      , default=[] )
+	parser.add_argument('--tpu-name'        , type=str             , default=None )
 	parser.add_argument('--tpu-zone'		, type=str, default='us-central1-f')
-	parser.add_argument('--num-shards'      , type=int             , default=8) # A single TPU has 8 shards
 	parser.add_argument('--steps-per-loop'  , type=int             , default=100)
 
 	parser.add_argument('--disable-comet'   , action='store_false', dest='use_comet')
@@ -116,7 +115,7 @@ def check_args(args):
 		assert args.num_labels == 10
 
 	if args.use_tpu:
-		assert len(args.tpu_name) > 0, "Please provide at least one --tpu-name"
+		assert args.tpu_name is not None, "Please provide a --tpu-name"
 
 	if args.use_comet:
 		assert comet_ml_api_key is not None,   "Please provide your comet API key as $COMET_ML_API_KEY or specify --disable-comet. Comet is a cloud ML experiment visualisation platform."
