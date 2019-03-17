@@ -237,9 +237,7 @@ class BigGAN(object):
 			d_train_op = d_optimizer.minimize(d_loss, var_list=d_vars, global_step=tf.train.get_global_step())
 
 			
-			g_optimizer = MovingAverageOptimizer(
-				tf.train.AdamOptimizer(params.g_lr, beta1=params.beta1, beta2=params.beta2), 
-				average_decay=params.moving_decay)
+			g_optimizer = tf.train.AdamOptimizer(params.g_lr, beta1=params.beta1, beta2=params.beta2)
 			
 			if params.use_tpu:
 				g_optimizer = tf.contrib.tpu.CrossShardOptimizer(g_optimizer)

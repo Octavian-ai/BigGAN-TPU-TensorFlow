@@ -72,8 +72,8 @@ def parse_args():
 
 	parser.add_argument('--self-attn-res'   , action='append', default=[] )
 
-	parser.add_argument('--g-lr'            , type=float           , default=0.00005                           , help='learning rate for generator')
-	parser.add_argument('--d-lr'            , type=float           , default=0.0002                            , help='learning rate for discriminator')
+	parser.add_argument('--g-lr'            , type=float           , default=0.0001                           , help='learning rate for generator')
+	parser.add_argument('--d-lr'            , type=float           , default=0.0005                            , help='learning rate for discriminator')
 
 	# if lower batch size
 	# g_lr = 0.0001
@@ -84,8 +84,8 @@ def parse_args():
 	# d_lr = 0.0002
 
 	parser.add_argument('--beta1'          , type=float    , default=0.0           , help='beta1 for Adam optimizer')
-	parser.add_argument('--beta2'          , type=float    , default=0.9           , help='beta2 for Adam optimizer')
-	parser.add_argument('--moving-decay'   , type=float    , default=0.9999        , help='moving average decay for generator')
+	parser.add_argument('--beta2'          , type=float    , default=0.999         , help='beta2 for Adam optimizer')
+	parser.add_argument('--moving-decay'   , type=float    , default=0.9999        , help='Moving average parameter decay for generator')
 
 	parser.add_argument('--z-dim'          , type=int      , default=128           , help='Dimension of noise vector')
 	parser.add_argument('--sn'             , type=str2bool , default=True          , help='using spectral norm')

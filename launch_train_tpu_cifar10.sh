@@ -12,10 +12,10 @@ nohup pipenv run python main_tpu.py \
 	--img-ch 3 \
 	--num-labels 10 \
 	--layers 3 \
-	--batch-size 64 \
+	--batch-size 128 \
 	--ch 96 \
 	--epoch 200000 \
-	--predict-every 20 \
+	--predict-every 40 \
 	--tag cifar10 \
 	--tag run-$RANDOM \
 	--steps-per-loop 500 \
