@@ -9,9 +9,9 @@ I (David Mack) have been modifying this network to allow for configuration of it
 ## Implementation notes/issues
 
 - TODO: Implement BigGAN-deep architecture (simpler class embedding, deeper resblock)
-- TODO: Ensure `--layers 6` and `--layers 7` generate 256px and 512px architectures as per the paper
 - TODO: Explore whether `orthogonal initialization` (paper's method) should be used instead of `random normal initialization` (current implementation)
-- TODO: Implement exponential average parameter/batch norm sampling during prediction
+- TODO: Implement exponential average parameter/batch norm sampling during prediction and evaluation
+- TODO: Find bug in inception score and implement FID
 
 ## Usage
 

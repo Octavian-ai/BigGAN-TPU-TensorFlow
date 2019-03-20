@@ -18,11 +18,11 @@ class BigGAN(object):
 	# Generator
 	##################################################################################
 
-	def generator(self, params, z, labels, is_training=True, reuse=False):
+	def generator(self, params, z, labels, is_training=True, reuse=False, getter=None):
 		logger.debug("generator")
 		cross_device = params['use_tpu']
 
-		with tf.variable_scope("generator", reuse=reuse):
+		with tf.variable_scope("generator", reuse=reuse, custom_getter=getter):
 			# 6
 			if params['z_dim'] == 128:
 				split_dim = 20
@@ -209,6 +209,18 @@ class BigGAN(object):
 		d_vars = [var for var in t_vars if 'discriminator' in var.name]
 		g_vars = [var for var in t_vars if 'generator' in var.name]
 
+		# --------------------------------------------------------------------------
+		# Averaging var values can help with eval/prediction
+		# http://ruishu.io/2017/11/22/ema/
+		# --------------------------------------------------------------------------
+		
+		ema = tf.train.ExponentialMovingAverage(decay=params['moving_decay'])
+		ema_op = ema.apply(g_vars)
+
+		def ema_getter(getter, name, *args, **kwargs):
+			var = getter(name, *args, **kwargs)
+			ema_var = ema.average(var)
+			return ema_var if ema_var else var
 
 		# --------------------------------------------------------------------------
 		# Loss
@@ -258,11 +270,11 @@ class BigGAN(object):
 		# Predictions
 		# --------------------------------------------------------------------------
 
+		predict_fake_images = self.generator(params, z, labels, reuse=True, getter=ema_getter)
+
 		predictions = {
-			"z": z,
-			"fake_image": fake_images,
-			"fake_logits": fake_logits,
-			"labels": labels
+			"fake_image": predict_fake_images,
+			"labels": labels,
 		}
 
 		# --------------------------------------------------------------------------
