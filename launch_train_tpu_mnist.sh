@@ -17,5 +17,4 @@ nohup pipenv run python main_tpu.py \
 	--epoch 20 \
 	--tag mnist \
 	--tag run-$RANDOM \
-	--disable-inception-score \
 	$@ &

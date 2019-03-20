@@ -19,5 +19,4 @@ nohup pipenv run python main_tpu.py \
 	--tag cifar10 \
 	--tag run-$RANDOM \
 	--steps-per-loop 500 \
-	--disable-inception-score \
 	$@ &

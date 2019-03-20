@@ -65,7 +65,7 @@ def parse_args():
 	parser.add_argument('--steps-per-loop'  , type=int             , default=100)
 
 	parser.add_argument('--disable-comet'   , action='store_false', dest='use_comet')
-	parser.add_argument('--disable-inception-score'   , action='store_false', dest='use_inception_score')
+	parser.add_argument('--enable-inception-score'   , action='store_true', dest='use_inception_score')
 	parser.add_argument('--disable-label-cond'   , action='store_false', dest='use_label_cond')
 
 	parser.add_argument('--enable-summary', action='store_true', dest='use_summary')
