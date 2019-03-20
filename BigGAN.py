@@ -214,13 +214,13 @@ class BigGAN(object):
 		# http://ruishu.io/2017/11/22/ema/
 		# --------------------------------------------------------------------------
 		
-		# ema = tf.train.ExponentialMovingAverage(decay=params['moving_decay'])
-		# ema_op = ema.apply(g_vars)
+		ema = tf.train.ExponentialMovingAverage(decay=params['moving_decay'])
+		ema_op = ema.apply(g_vars)
 
-		# def ema_getter(getter, name, *args, **kwargs):
-		# 	var = getter(name, *args, **kwargs)
-		# 	ema_var = ema.average(var)
-		# 	return ema_var if ema_var is not None else var
+		def ema_getter(getter, name, *args, **kwargs):
+			var = getter(name, *args, **kwargs)
+			ema_var = ema.average(var)
+			return ema_var if ema_var is not None else var
 
 		# --------------------------------------------------------------------------
 		# Loss
@@ -270,7 +270,7 @@ class BigGAN(object):
 		# Predictions
 		# --------------------------------------------------------------------------
 
-		predict_fake_images = self.generator(params, z, labels, reuse=True) #, getter=ema_getter)
+		predict_fake_images = self.generator(params, z, labels, reuse=True, getter=ema_getter)
 
 		predictions = {
 			"fake_image": predict_fake_images,
