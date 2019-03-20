@@ -41,15 +41,16 @@ def predict_input_fn(params):
 
 	# Since we drop_remainder, we need to round up to nearest batch size
 	count = math.ceil(count / params['batch_size']) * params['batch_size']
+
+	# How many times to repeat the eye
+	num_tiles = math.ceil(count / params['num_labels'])
 	
 	# Which labels to generate
 	label_data = np.eye(params['num_labels'], dtype=np.float32)
-	label_data = np.tile(label_data, [1 + (count // params['num_labels']), 1])
-	# np.random.shuffle(label_data) # provide the labels in order
-	label_data = label_data[:count]
-	np.set_printoptions(threshold=np.inf)
 	
 	dataset = tf.data.Dataset.from_tensor_slices(label_data)
+	dataset = dataset.repeat(num_tiles)
+	dataset = dataset.take(count)
 	dataset = dataset.batch(params['batch_size'], drop_remainder=True)
 	return dataset
 
