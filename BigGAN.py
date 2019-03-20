@@ -220,7 +220,7 @@ class BigGAN(object):
 		def ema_getter(getter, name, *args, **kwargs):
 			var = getter(name, *args, **kwargs)
 			ema_var = ema.average(var)
-			return ema_var if ema_var else var
+			return ema_var if ema_var is not None else var
 
 		# --------------------------------------------------------------------------
 		# Loss
