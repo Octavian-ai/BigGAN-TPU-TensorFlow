@@ -2,7 +2,6 @@
 
 nohup pipenv run python main_tpu.py \
 	--use-tpu \
-	--tpu-name $TPU_NAME \
 	--model-dir gs://octavian-training2/gan/mnist/model \
 	--data-dir gs://octavian-training2/gan/mnist/data \
 	--result-dir ./results \

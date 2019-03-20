@@ -2,7 +2,6 @@
 
 nohup pipenv run python main_tpu.py \
 	--use-tpu \
-	--tpu-name $TPU_NAME \
 	--data-source cifar10 \
 	--model-dir gs://octavian-training2/gan/cifar10/model \
 	--data-dir gs://octavian-training2/gan/cifar10/data \

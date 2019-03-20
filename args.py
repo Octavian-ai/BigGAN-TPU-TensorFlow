@@ -60,8 +60,8 @@ def parse_args():
 	parser.add_argument('--layers'          , type=int             , default=5 )
 
 	parser.add_argument('--use-tpu'         , action='store_true')
-	parser.add_argument('--tpu-name'        , type=str             , default=None )
-	parser.add_argument('--tpu-zone'		, type=str, default='us-central1-f')
+	parser.add_argument('--tpu-name'        , type=str             , default=os.environ.get('TPU_NAME', None))
+	parser.add_argument('--tpu-zone'		, type=str             , default=os.environ.get('TPU_ZONE', None))
 	parser.add_argument('--steps-per-loop'  , type=int             , default=100)
 
 	parser.add_argument('--disable-comet'   , action='store_false', dest='use_comet')
