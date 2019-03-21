@@ -215,7 +215,6 @@ class BigGAN(object):
 		# --------------------------------------------------------------------------
 		
 		ema = tf.train.ExponentialMovingAverage(decay=params['moving_decay'])
-		ema_op = ema.apply(g_vars)
 
 		def ema_getter(getter, name, *args, **kwargs):
 			var = getter(name, *args, **kwargs)
@@ -261,7 +260,14 @@ class BigGAN(object):
 			train_ops = [g_train_op]
 			for i in range(params.n_critic):
 				train_ops.append(d_train_op)
-			train_op = tf.group(*train_ops, ema_op)
+			train_op = tf.group(*train_ops)
+
+			with tf.control_dependencies([train_op]):
+				# Create the shadow variables, and add ops to maintain moving averages
+				# of var0 and var1. This also creates an op that will update the moving
+				# averages after each training step.  This is what we will use in place
+				# of the usual training op.
+				train_op = ema.apply(g_vars)
 
 		else:
 			train_op = None
