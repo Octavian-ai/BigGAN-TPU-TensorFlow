@@ -261,7 +261,7 @@ class BigGAN(object):
 			train_ops = [g_train_op]
 			for i in range(params.n_critic):
 				train_ops.append(d_train_op)
-			train_op = tf.group(*train_ops)
+			train_op = tf.group(*train_ops, ema_op)
 
 		else:
 			train_op = None
