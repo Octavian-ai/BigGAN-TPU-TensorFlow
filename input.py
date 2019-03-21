@@ -67,6 +67,10 @@ def tfr_input_fn(params, is_training):
 	matching_files = tf.gfile.Glob(path)
 
 	dataset = tf.data.TFRecordDataset(matching_files)
+
+	if params['take_examples'] is not None:
+		dataset = dataset.take(params['take_examples'])
+
 	dataset = dataset.map(lambda record: parse_tfrecord(params, record))
 	dataset = dataset.shuffle(params['batch_size']*20)
 	dataset = dataset.repeat()
