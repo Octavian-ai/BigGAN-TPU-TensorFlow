@@ -54,10 +54,10 @@ def parse_args():
 	parser.add_argument('--eval-examples'   , type=int             , default=50000                             , help='The number of eval examples in the dataset (used to calculate steps per epoch). Default to ImageNet values')
 	parser.add_argument('--shuffle-buffer'  , type=int             , default=4000 )
 	
-
 	parser.add_argument('--batch-size'      , type=int             , default=2048  , dest="_batch_size"        , help='The size of batch across all GPUs')
 	parser.add_argument('--ch'              , type=int             , default=96                                , help='base channel number per layer')
 	parser.add_argument('--layers'          , type=int             , default=5 )
+	parser.add_argument('--self-attn-res'   , action='append', default=[] )
 
 	parser.add_argument('--use-tpu'         , action='store_true')
 	parser.add_argument('--tpu-name'        , type=str             , default=os.environ.get('TPU_NAME', None))
@@ -67,10 +67,7 @@ def parse_args():
 	parser.add_argument('--disable-comet'   , action='store_false', dest='use_comet')
 	parser.add_argument('--enable-inception-score'   , action='store_true', dest='use_inception_score')
 	parser.add_argument('--disable-label-cond'   , action='store_false', dest='use_label_cond')
-
 	parser.add_argument('--enable-summary', action='store_true', dest='use_summary')
-
-	parser.add_argument('--self-attn-res'   , action='append', default=[] )
 
 	parser.add_argument('--g-lr'            , type=float           , default=0.0001                           , help='learning rate for generator')
 	parser.add_argument('--d-lr'            , type=float           , default=0.0005                            , help='learning rate for discriminator')

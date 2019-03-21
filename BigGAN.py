@@ -178,8 +178,13 @@ class BigGAN(object):
 		if mode == tf.estimator.ModeKeys.PREDICT:
 			labels = features
 		
+
 		# Latent input to generate images
-		z = tf.truncated_normal(shape=[params.batch_size, params.z_dim], name='random_z')
+		if mode == tf.estimator.ModeKeys.TRAIN:
+			z = tf.random.normal(shape=[params.batch_size, params.z_dim], name='random_z')
+		else:
+			# The "truncated normal" trick to make generated predictions nicer looking
+			z = tf.random.truncated_normal(shape=[params.batch_size, params.z_dim], name='random_z')
 		
 		# generate and critique fake images
 		fake_images = self.generator(params, z, labels)
