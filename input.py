@@ -88,7 +88,7 @@ def tfds_input_fn(params, dataset, is_training=True):
 	if params['take_examples'] is not None:
 		dataset = dataset.take(params['take_examples'])
 
-	dataset = dataset.shuffle(1024)
+	dataset = dataset.shuffle(params['batch_size']*20)
 	dataset = dataset.repeat()
 	dataset = dataset.batch(params['batch_size'], drop_remainder=True)
 	dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
