@@ -155,7 +155,7 @@ def parse_tfrecord_progan(params, record):
 	img = tf.transpose(img, [1,2,0]) # CHW => HWC
 	img = tf.cast(img, tf.float32) / 127.5 - 1
 
-	empty_label = tf.constant([params['batch_size'], params['num_labels']], dtype=tf.int64)
+	empty_label = tf.constant([params['batch_size'], params['num_labels']], dtype=img.dtype)
 
 	return img, empty_label
 
