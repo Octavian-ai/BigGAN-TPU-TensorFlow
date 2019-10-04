@@ -11,7 +11,7 @@ name = "pypi"
 
 [packages]
 
-tensorflow = "==1.12"
+tensorflow = "==1.12.2"
 scipy = "*"
 imageio = "*"
 google-api-python-client = "*"
